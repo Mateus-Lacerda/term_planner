@@ -9,6 +9,7 @@ use term_planner::{
         add_task,
         get_tasks
     },
+    input::clean_terminal
 };
 
 macro_rules! input {
@@ -48,7 +49,7 @@ fn add_task_from_input(
     _ = input!();
 }
 
-fn main() {
+fn menu() {
     let text = "Main Menu";
     let mut options = Options::default();
     let opt_lst = Vec::from(
@@ -71,7 +72,7 @@ fn main() {
                     let res = options.print_option("Your tasks:");
                     match res {
                         3 => { 
-                            main() 
+                            menu() 
                         },
                         _ => () // TODO: Implement more logic here
                     }
@@ -81,15 +82,20 @@ fn main() {
         },
         2 => {
             add_task_from_input();
-            main();
+            menu();
         }
         3 => {
             println!("{}", colored("Not implemented!", "red"));
             println!("Press any key to continue...");
             _ = input!();
-            main()
+            menu()
         }
         -1 => (),
-        _ => main()
+        _ => menu()
     }
+}
+
+fn main() {
+    clean_terminal();
+    menu();
 }

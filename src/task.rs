@@ -59,7 +59,7 @@ impl TaskVec {
         self.tasks.insert(index, task);
     }
 
-    pub fn print_tasks(self) {
+    pub fn print_tasks(&self) {
         for task in self.tasks.iter() {
             println!("{task}")
         }

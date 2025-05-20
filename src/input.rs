@@ -78,4 +78,4 @@ pub fn get_kb_input() -> usize {
     code
 }
 
-pub fn clean_terminal() { print!("\x1B[2J"); }
+pub fn clean_terminal() { print!("\x1B[2J\x1B[H"); }
