@@ -53,8 +53,8 @@ fn main() {
     let mut options = Options::default();
     let opt_lst = Vec::from(
         [
-            String::from("Add task"),
             String::from("Check tasks"),
+            String::from("Add task"),
             String::from("Remove tasks")
         ]
     );
@@ -63,10 +63,6 @@ fn main() {
     let selected = options.print_option(text);
     match selected {
         1 => {
-            add_task_from_input();
-            main();
-        }
-        2 => {
             let result = get_tasks();
             match result {
                 Ok(res) => {
@@ -83,6 +79,16 @@ fn main() {
                 Err(_) => println!("{}", colored("Error!", "red"))
             }
         },
+        2 => {
+            add_task_from_input();
+            main();
+        }
+        3 => {
+            println!("{}", colored("Not implemented!", "red"));
+            println!("Press any key to continue...");
+            _ = input!();
+            main()
+        }
         -1 => (),
         _ => main()
     }

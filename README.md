@@ -27,8 +27,9 @@ TermPlanner is a minimal terminal-based task planner written in Rust (TUI).
 2. Create the JSON storage file:
 
    ```bash
-   touch tasks.json
+   echo "{\"tasks\":[]}" >> tasks.json
    ```
+
 3. Build and run:
 
    ```bash
