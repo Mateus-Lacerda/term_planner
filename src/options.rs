@@ -2,9 +2,11 @@ use std::collections::hash_map::HashMap;
 use std::ops::Range;
 use std::vec::Vec;
 
+use libc::exit;
+
 use crate::{
     colors::colored,
-    input::{
+    io_utils::{
         get_kb_input,
         clean_terminal
     },
@@ -45,7 +47,7 @@ impl Options {
                 let opt = format!("» {k}: {v}");
 
                 if self.selected == *k {
-                    println!(" {}", colored(&opt, "green"))
+                    println!(" {}", colored(&opt, "yellow"))
                 } else {
                     println!("{opt}");
                 }
@@ -57,7 +59,10 @@ impl Options {
                 1 => self.selected - 1,
                 2 => self.selected + 1,
                 3 => return 3,
-                4 => return self.selected as i8,
+                4 => {
+                    self.option_selected = true;
+                    break
+                },
                 10 => {
                     self.last_move = 4;
                     self.option_selected = true;
@@ -65,16 +70,19 @@ impl Options {
                 },
                 120 => {
                     println!("{}", colored("So long...", "blue"));
-                    break
+                    unsafe {
+                        exit(1)
+                    }
                 },
                 _ => self.selected,
             };
         }
-        if self.option_selected {
-            self.selected as i8
-        } else {
-            -1
-        }
+        self.selected as i8
+    }
+
+    pub fn print_ui_and_text(&mut self, text: &str) {
+        self.print_gui();
+        println!("{}", colored(text, "yellow"));
     }
 
     pub fn get_text_from_index(&self, idx: usize) -> &str {

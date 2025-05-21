@@ -2,7 +2,7 @@ use std::fs::{read_to_string, write};
 
 use chrono::{DateTime, Utc};
 use serde_json::{
-    to_string,
+    to_string_pretty,
     from_str,
     Result,
 };
@@ -17,7 +17,7 @@ use crate::{
 
 
 pub fn write_tasks(tasks: &TaskVec) {
-    let ser = to_string(tasks);
+    let ser = to_string_pretty(tasks);
     match ser {
         Ok(ser) => _ = write("tasks.json", ser),
         Err(_) => println!("{}", colored("Erro!", "red"))

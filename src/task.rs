@@ -76,20 +76,34 @@ impl TaskVec {
 
     pub fn get_as_text(&self, idx: usize) -> String {
         if let Some(t) = self.tasks.get(idx) {
-            format!("{} - ({})", t.description, t.due_date.to_string())
+            let task = format!("{} - ({})", t.description, t.due_date.to_string());
+            if !t.completed {
+                format!("{task}")
+            } else {
+                format!("{}", colored(&task, "green"))
+            }
         } else {
             String::from("There was an error reading the task!")
         }
     }
 
+    pub fn get(&mut self, idx: usize) -> Option<&mut Task> {
+        self.tasks.get_mut(idx)
+    }
+
+    pub fn save(&self) {
+        write_tasks(&self);
+    }
+
     pub fn complete(&mut self, idx: usize) {
         if let Some(t) = &mut self.tasks.get_mut(idx) {
-            t.completed = false;
+            t.completed = true;
             write_tasks(&self);
         } else {
             println!("{}", colored("There was an error reading the task!", "red"));
         }
     }
+
 }
 
 #[derive(Serialize, Deserialize)]
@@ -116,5 +130,10 @@ impl Task {
             description: String::from(description),
             completed: false
         }
+    }
+
+    pub fn update(&mut self, description: &str, due_date: DateTime<Utc>) {
+            self.description = description.to_string();
+            self.due_date = due_date;
     }
 }

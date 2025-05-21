@@ -1,6 +1,41 @@
 use std::io::{self, Read};
 use std::os::unix::io::AsRawFd;
 
+#[macro_export]
+macro_rules! input {
+    () => {{
+        use std::io::{self, Write};
+        print!(">> ");
+        let mut buffer = String::new();
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut buffer).unwrap();
+        buffer.trim().to_string()
+    }};
+}
+
+#[macro_export]
+macro_rules! integer_input {
+    () => {{
+        use std::io::{self, Write};
+        let number;
+        loop {
+            print!(">> ");
+            let mut buffer = String::new();
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut buffer).unwrap();
+            let result = buffer.trim().to_string().parse::<i32>();
+            match result {
+                Ok(res) => {
+                    number = res;
+                    break
+                },
+                Err(_) => ()
+            }
+        }
+        number
+    }};
+}
+
 // Código do GPT
 #[repr(C)]
 #[derive(Clone)]

@@ -1,4 +1,4 @@
-pub mod input;
+pub mod io_utils;
 pub mod colors;
 pub mod options;
 pub mod data;

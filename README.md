@@ -6,6 +6,8 @@ TermPlanner is a minimal terminal-based task planner written in Rust (TUI).
 
 - **View Tasks**  
 - **Add Task** (with date & description)  
+* **Mark Task as done**
+* **Edit tasks**
 
 ## Prerequisites
 
@@ -62,8 +64,7 @@ Tasks are stored in `tasks.json` with this structure:
 
 ## TODO
 
-* Mark tasks as completed
 * Remove tasks
-* Edit tasks
 * Filter and search tasks
+* Nerd fonts for nerds
 * AI?
