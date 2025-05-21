@@ -49,6 +49,56 @@ fn add_task_from_input(
     _ = input!();
 }
 
+fn task_menu(text: &str) {
+    let mut options = Options::default();
+    let opt_lst = Vec::from(
+        [
+            String::from("Mark as completed."),
+            String::from("Edit."),
+            String::from("Delete."),
+        ]
+    );
+
+    options.build(opt_lst);
+    let selected = options.print_option(text);
+    match options.last_move {
+        4 => {
+            let result = get_tasks();
+            match result {
+                Ok(mut res) => {
+                    println!("{}", colored("Task Updated!", "green"));
+                    println!("Press any key to continue...");
+                    res.complete(selected as usize);
+                },
+                Err(_) => println!("{}", colored("Error!", "red"))
+            }
+        },
+        2 => {
+            add_task_from_input();
+        },
+        3 => show_tasks(),
+        _ => show_tasks(),
+    }
+    menu()
+}
+
+fn show_tasks() {
+    let result = get_tasks();
+    match result {
+        Ok(res) => {
+            let mut options = Options::default();
+            options.build_from_tasks(res);
+            let res = options.print_option("Your tasks:");
+            match options.last_move {
+                4 => task_menu(options.get_text_from_index(res as usize)),
+                3 => menu(),
+                _ => println!("{}", options.last_move)
+            }
+        },
+        Err(_) => println!("{}", colored("Error!", "red"))
+    }
+}
+
 fn menu() {
     let text = "Main Menu";
     let mut options = Options::default();
@@ -56,30 +106,13 @@ fn menu() {
         [
             String::from("Check tasks"),
             String::from("Add task"),
-            String::from("Remove tasks")
         ]
     );
 
     options.build(opt_lst);
     let selected = options.print_option(text);
     match selected {
-        1 => {
-            let result = get_tasks();
-            match result {
-                Ok(res) => {
-                    let mut options = Options::default();
-                    options.build_from_tasks(res);
-                    let res = options.print_option("Your tasks:");
-                    match res {
-                        3 => { 
-                            menu() 
-                        },
-                        _ => () // TODO: Implement more logic here
-                    }
-                },
-                Err(_) => println!("{}", colored("Error!", "red"))
-            }
-        },
+        1 => show_tasks(),
         2 => {
             add_task_from_input();
             menu();

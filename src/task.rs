@@ -3,6 +3,11 @@ use std::fmt::{Display, Formatter, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use crate::{
+    data::write_tasks,
+    colors::colored
+};
+
 // Code from serde documentation
 mod my_date_format {
     use chrono::{DateTime, Utc, NaiveDateTime};
@@ -69,11 +74,20 @@ impl TaskVec {
         self.tasks.len()
     }
 
-    pub fn get(&self, idx: usize) -> String {
+    pub fn get_as_text(&self, idx: usize) -> String {
         if let Some(t) = self.tasks.get(idx) {
             format!("{} - ({})", t.description, t.due_date.to_string())
         } else {
             String::from("There was an error reading the task!")
+        }
+    }
+
+    pub fn complete(&mut self, idx: usize) {
+        if let Some(t) = &mut self.tasks.get_mut(idx) {
+            t.completed = false;
+            write_tasks(&self);
+        } else {
+            println!("{}", colored("There was an error reading the task!", "red"));
         }
     }
 }
@@ -84,6 +98,7 @@ pub struct Task {
     #[serde(with = "my_date_format")]
     due_date: DateTime<Utc>,
     index: usize,
+    completed: bool
 }
 
 impl Display for Task {
@@ -98,7 +113,8 @@ impl Task {
         Task {
             index: 0,
             due_date: due_date,
-            description: String::from(description)
+            description: String::from(description),
+            completed: false
         }
     }
 }

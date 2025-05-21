@@ -15,7 +15,8 @@ pub struct Options {
     options: Vec<usize>,
     options_map: HashMap<usize, String>,
     pub selected: usize,
-    option_selected: bool
+    option_selected: bool,
+    pub last_move: usize
 }
 
 impl Options {
@@ -51,12 +52,14 @@ impl Options {
 
             }
             let direction = get_kb_input();
+            self.last_move = direction;
             self.selected = match direction {
                 1 => self.selected - 1,
                 2 => self.selected + 1,
                 3 => return 3,
                 4 => return self.selected as i8,
                 10 => {
+                    self.last_move = 4;
                     self.option_selected = true;
                     break
                 },
@@ -68,14 +71,16 @@ impl Options {
             };
         }
         if self.option_selected {
-            // let v = if let Some(val) = self.options_map.get(&self.selected) {
-            //     val
-            // } else { "" };
-            // println!("Option Selected: {}", v);
             self.selected as i8
         } else {
             -1
         }
+    }
+
+    pub fn get_text_from_index(&self, idx: usize) -> &str {
+        if let Some(opt) = self.options_map.get(&idx) {
+            opt as &str
+        } else { "" }
     }
     
     fn print_gui(&self) {
@@ -100,7 +105,7 @@ impl Options {
         let rng = Range {start: 1, end: end+1};
         self.options.extend(rng);
         for i in self.options.iter() {
-            self.options_map.insert(*i, options.get(i-1));
+            self.options_map.insert(*i, options.get_as_text(i-1));
         }
     }
 }
@@ -111,7 +116,8 @@ impl Default for Options {
             options: Vec::new(),
             options_map: HashMap::new(),
             selected: 0,
-            option_selected: false
+            option_selected: false,
+            last_move: 10
         }
     }
 }
