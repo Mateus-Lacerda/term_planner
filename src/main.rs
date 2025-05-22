@@ -1,6 +1,6 @@
 use std::vec::Vec;
 
-use chrono::{TimeZone, Utc};
+use chrono::{FixedOffset, TimeZone, Utc};
 
 use term_planner::{
     input,
@@ -12,7 +12,8 @@ use term_planner::{
         get_tasks
     },
     task::Task,
-    io_utils::clean_terminal
+    io_utils::clean_terminal,
+    notify::{send_notify, start_notification_service}
 };
 
 fn add_task_from_input(
@@ -31,6 +32,8 @@ fn add_task_from_input(
     let min: u32 = integer_input!() as u32;
 
     if let Some(date) = Utc.with_ymd_and_hms(year, month, day, hour, min, 0).earliest() {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let date = date.with_timezone(&offset);
         let res = add_task(&description, date);
         match res {
             Ok(_) => println!("{}", colored("Task added!", "green")),
@@ -57,6 +60,8 @@ fn edit_task_from_input(
     let min: u32 = integer_input!() as u32;
 
     if let Some(date) = Utc.with_ymd_and_hms(year, month, day, hour, min, 0).earliest() {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let date = date.with_timezone(&offset);
         task.update(&description, date);
     } else { println!("{}", colored("Error!", "red")) }
 }
@@ -159,6 +164,8 @@ fn menu() {
 }
 
 fn main() {
+    send_notify("Task planner started!", false);
+    start_notification_service();
     clean_terminal();
     menu();
 }

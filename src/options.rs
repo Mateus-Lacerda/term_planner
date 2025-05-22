@@ -2,6 +2,7 @@ use std::collections::hash_map::HashMap;
 use std::ops::Range;
 use std::vec::Vec;
 
+use chrono::{FixedOffset, Utc};
 use libc::exit;
 
 use crate::{
@@ -90,12 +91,18 @@ impl Options {
             opt as &str
         } else { "" }
     }
+
+    fn now(&self) -> String {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        Utc::now().with_timezone(&offset).to_string()
+    }
     
     fn print_gui(&self) {
         clean_terminal();
         println!("{}", colored("|----- TermPlanner -----|", "yellow"));
         println!("{}", colored("Press `x` to exit...", "red"));
         println!("{}", colored("Navigate with the arrows", "green"));
+        println!("{}", colored(&self.now(), "green"));
         println!("{}", colored("|-----------------------|\n", "yellow"));
     }
 

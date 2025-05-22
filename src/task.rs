@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -10,7 +10,7 @@ use crate::{
 
 // Code from serde documentation
 mod my_date_format {
-    use chrono::{DateTime, Utc, NaiveDateTime};
+    use chrono::{DateTime, FixedOffset, NaiveDateTime};
     use serde::{self, Deserialize, Serializer, Deserializer};
 
     const FORMAT: &'static str = "%Y-%m-%d %H:%M";
@@ -23,7 +23,7 @@ mod my_date_format {
     //
     // although it may also be generic over the input types T.
     pub fn serialize<S>(
-        date: &DateTime<Utc>,
+        date: &DateTime<FixedOffset>,
         serializer: S,
     ) -> Result<S::Ok, S::Error>
     where
@@ -42,19 +42,20 @@ mod my_date_format {
     // although it may also be generic over the output types T.
     pub fn deserialize<'de, D>(
         deserializer: D,
-    ) -> Result<DateTime<Utc>, D::Error>
+    ) -> Result<DateTime<FixedOffset>, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
         let dt = NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
-        Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        Ok(DateTime::<FixedOffset>::from_naive_utc_and_offset(dt, offset))
     }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TaskVec {
-    tasks: Vec<Task>
+    pub tasks: Vec<Task>
 }
 
 impl TaskVec {
@@ -110,20 +111,29 @@ impl TaskVec {
 pub struct Task {
     description: String,
     #[serde(with = "my_date_format")]
-    due_date: DateTime<Utc>,
+    due_date: DateTime<FixedOffset>,
     index: usize,
-    completed: bool
+    pub completed: bool
 }
 
 impl Display for Task {
     fn fmt(&self, _f: &mut Formatter<'_>) -> Result { 
-        println!("Task:\n{}\nDue date:\n{}", self.description, self.due_date.to_string());
+        println!("{}", self.get_as_text());
         Ok(())
     }
 }
 
 impl Task {
-    pub fn new(description: &str, due_date: DateTime<Utc>) -> Self {
+    pub fn get_as_text(&self) -> String {
+
+        let task_text = format!("{} - ({})", self.description, self.due_date.to_string());
+        if !self.completed {
+            format!("{task_text}")
+        } else {
+            format!("{}", colored(&task_text, "green"))
+        }
+    }
+    pub fn new(description: &str, due_date: DateTime<FixedOffset>) -> Self {
         Task {
             index: 0,
             due_date: due_date,
@@ -132,8 +142,16 @@ impl Task {
         }
     }
 
-    pub fn update(&mut self, description: &str, due_date: DateTime<Utc>) {
+    pub fn update(&mut self, description: &str, due_date: DateTime<FixedOffset>) {
             self.description = description.to_string();
             self.due_date = due_date;
+    }
+
+    pub fn is_due(&self) -> bool {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let now = Utc::now().with_timezone(&offset);
+        if let Some(td) = TimeDelta::new(120, 0) {
+            now - self.due_date >= td
+        } else { false }
     }
 }

@@ -1,6 +1,6 @@
 use std::fs::{read_to_string, write};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde_json::{
     to_string_pretty,
     from_str,
@@ -30,7 +30,7 @@ pub fn get_tasks() -> Result<TaskVec> {
     Ok(tasks)
 }
 
-pub fn add_task(description: &str, due_date: DateTime<Utc>) -> Result<()> {
+pub fn add_task(description: &str, due_date: DateTime<FixedOffset>) -> Result<()> {
     let result = get_tasks();
     match result {
         Ok(mut result) => {
