@@ -65,5 +65,4 @@ Tasks are stored in `tasks.json` with this structure:
 * Remove tasks
 * Create a daemon to check for due tasks in the background
 * Filter and search tasks
-* Nerd fonts for nerds
 * AI?

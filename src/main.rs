@@ -141,7 +141,7 @@ fn show_tasks() {
 }
 
 fn menu() {
-    let text = "Main Menu";
+    let text = "  Main Menu";
     let mut options = Options::default();
     let opt_lst = Vec::from(
         [

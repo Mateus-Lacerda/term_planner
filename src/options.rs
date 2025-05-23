@@ -45,7 +45,7 @@ impl Options {
                 }
 
                 // Efeito visual para opção selecionada
-                let opt = format!("» {k}: {v}");
+                let opt = format!("‣ {k}: {v}");
 
                 if self.selected == *k {
                     println!(" {}", colored(&opt, "yellow"))
@@ -94,15 +94,17 @@ impl Options {
 
     fn now(&self) -> String {
         let offset = FixedOffset::west_opt(3 * 3600).expect("");
-        Utc::now().with_timezone(&offset).to_string()
+        Utc::now().with_timezone(&offset).format("%d/%m/%Y %H:%M").to_string()
     }
     
     fn print_gui(&self) {
         clean_terminal();
-        println!("{}", colored("|----- TermPlanner -----|", "yellow"));
-        println!("{}", colored("Press `x` to exit...", "red"));
-        println!("{}", colored("Navigate with the arrows", "green"));
-        println!("{}", colored(&self.now(), "green"));
+        println!("{}", colored("|----  TermPlanner ----|", "yellow"));
+        println!("");
+        println!("{}", colored("   Press  to exit...   ", "red"));
+        println!("{}", colored(" Navigate with      ", "green"));
+        println!("");
+        println!("{}", colored(&format!("     {}    ", self.now()), "green"));
         println!("{}", colored("|-----------------------|\n", "yellow"));
     }
 

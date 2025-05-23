@@ -5,7 +5,7 @@ use std::os::unix::io::AsRawFd;
 macro_rules! input {
     () => {{
         use std::io::{self, Write};
-        print!(">> ");
+        print!("» ");
         let mut buffer = String::new();
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut buffer).unwrap();
@@ -19,7 +19,7 @@ macro_rules! integer_input {
         use std::io::{self, Write};
         let number;
         loop {
-            print!(">> ");
+            print!("» ");
             let mut buffer = String::new();
             io::stdout().flush().unwrap();
             io::stdin().read_line(&mut buffer).unwrap();
