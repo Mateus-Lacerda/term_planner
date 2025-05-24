@@ -17,7 +17,15 @@ TermPlanner is a minimal terminal-based task planner written in Rust (TUI).
 - [Rust and Cargo](https://www.rust-lang.org/tools/install) installed  
 - [dunst](https://dunst-project.org/download) installed (for notifications)
 
-## Installation & Run
+## Usage & Navigation
+
+* **Arrow keys**: move between menu options
+* **→ (Right arrow)**: select or confirm an option
+* **Enter**: also selects or confirms
+* **← (Left arrow)**: go back to the previous menu
+* **`x`**: exit the application
+
+## Local development
 
 1. Clone this repository:
 
@@ -26,25 +34,13 @@ TermPlanner is a minimal terminal-based task planner written in Rust (TUI).
    cd term_planner
    ```
 
-2. Create the JSON storage file:
-
-   ```bash
-   echo "{\"tasks\":[]}" >> tasks.json
-   ```
-
-3. Build and run:
+2. Build and run:
 
    ```bash
    cargo run
    ```
 
-## Usage & Navigation
-
-* **Arrow keys**: move between menu options
-* **→ (Right arrow)**: select or confirm an option
-* **Enter**: also selects or confirms
-* **← (Left arrow)**: go back to the previous menu
-* **`x`**: exit the application
+3. Add some cool feature!
 
 ## Manual Installation (per-user)
 
