@@ -2,6 +2,5 @@
 Description=TermPlanner Notification Service
 
 [Service]
-Type=oneshot
-ExecStart=/usr/bin/term_planner --notify
-
+Environment=PATH=%h/.local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env term_planner --notify
