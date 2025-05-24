@@ -1,2 +1,14 @@
 /target
 tasks.json
+# Rust
+/target/
+/pkg/
+/term_planner-*.pkg.tar.zst
+/term_planner-*.tar.gz
+
+# Não versionar cópia local do git dentro do repositório
+/term_planner/
+/src/term_planner/
+
+# Outros artefatos
+*.log

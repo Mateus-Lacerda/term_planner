@@ -3,4 +3,5 @@ Description=TermPlanner Notification Service
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/term_planner --notify
+ExecStart=/usr/bin/term_planner --notify
+
