@@ -140,7 +140,7 @@ impl Display for Task {
 impl Task {
     pub fn get_as_text(&self) -> String {
 
-        let task_text = format!("{} - ({})", self.description, self.due_date.to_string());
+        let task_text = format!("{} - ({})", self.description, self.due_date.format("%d/%m/%Y %H:%M").to_string());
         if !self.completed {
             format!("{task_text}")
         } else {

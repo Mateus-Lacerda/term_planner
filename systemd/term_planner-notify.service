@@ -1,0 +1,6 @@
+[Unit]
+Description=TermPlanner Notification Service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/term_planner --notify

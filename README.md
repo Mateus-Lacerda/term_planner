@@ -45,22 +45,6 @@ TermPlanner is a minimal terminal-based task planner written in Rust (TUI).
 * **← (Left arrow)**: go back to the previous menu
 * **`x`**: exit the application
 
-## Data Storage
-
-Tasks are stored in `tasks.json` with this structure:
-
-```json
-{
-  "tasks": [
-    {
-      "description": "Your task description",
-      "due_date": "YYYY-MM-DD HH:MM",
-      "index": 0
-    }
-  ]
-}
-```
-
 ## TODO
 
 * Create a daemon to check for due tasks in the background

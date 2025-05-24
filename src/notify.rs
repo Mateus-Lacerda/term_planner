@@ -24,7 +24,7 @@ pub fn send_notify(
 }
 
 
-pub fn start_notification_service() {
+pub fn run_notification_service() {
     let tasks = get_tasks();
     match tasks {
         Ok(t) => {

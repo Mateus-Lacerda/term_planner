@@ -13,7 +13,7 @@ use term_planner::{
     },
     task::Task,
     io_utils::{clean_terminal, get_kb_input},
-    notify::{send_notify, start_notification_service}
+    notify::{send_notify, run_notification_service}
 };
 
 fn add_task_from_input(
@@ -126,6 +126,12 @@ fn show_tasks() {
     let result = get_tasks();
     match result {
         Ok(res) => {
+            if res.len() == 0 {
+                println!("{}", colored("Now it's the time you add some tasks!", "green"));
+                println!("Press any key to continue...");
+                _ = get_kb_input();
+                menu();
+            }
             let mut options = Options::default();
             options.build_from_tasks(res);
             let res = options.print_option("Your tasks:");
@@ -164,8 +170,14 @@ fn menu() {
 }
 
 fn main() {
+    let mut args = std::env::args().skip(1);
+    if let Some(cmd) = args.next() {
+        if cmd == "--notify" {
+            run_notification_service();
+            return;
+        }
+    }
     send_notify("Task planner started!", false);
-    start_notification_service();
     clean_terminal();
     menu();
 }
