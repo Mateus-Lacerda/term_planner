@@ -51,10 +51,30 @@ fn edit_task_from_input(
 }
 
 fn task_menu(text: &str, selected_task: i8) {
+    let result = get_tasks();
+    let d_or_ud = match result {
+        Ok(mut res) => {
+            let comp = res.get(selected_task as usize - 1).expect("").completed;
+            if comp {
+                "undone"
+            } else { "done" }
+        },
+        Err(_) => ""
+    };
+
+    if d_or_ud == "" {
+        println!("{}", colored("Error!", "red"));
+        println!("Press any key to continue...");
+        _ = get_kb_input();
+        menu();
+    }
+
+    let d_or_ud = format!("Mark as {}.", &d_or_ud);
+
     let mut options = Options::default();
     let opt_lst = Vec::from(
         [
-            String::from("Mark as done."),
+            String::from(d_or_ud),
             String::from("Edit."),
             String::from("Delete."),
         ]
@@ -69,7 +89,7 @@ fn task_menu(text: &str, selected_task: i8) {
                     let result = get_tasks();
                     match result {
                         Ok(mut res) => {
-                            res.complete(selected_task as usize - 1);
+                            res.change_status(selected_task as usize - 1);
                             println!("{}", colored("Task Updated!", "green"));
                             println!("Press any key to continue...");
                             _ = get_kb_input();

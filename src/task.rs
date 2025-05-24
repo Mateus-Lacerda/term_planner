@@ -109,9 +109,9 @@ impl TaskVec {
         write_tasks(&self);
     }
 
-    pub fn complete(&mut self, idx: usize) {
+    pub fn change_status(&mut self, idx: usize) {
         if let Some(t) = &mut self.tasks.get_mut(idx) {
-            t.completed = true;
+            t.completed = !t.completed;
             write_tasks(&self);
         } else {
             println!("{}", colored("There was an error reading the task!", "red"));
