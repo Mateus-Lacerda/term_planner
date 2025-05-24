@@ -12,7 +12,7 @@ use term_planner::{
         get_tasks
     },
     task::Task,
-    io_utils::clean_terminal,
+    io_utils::{clean_terminal, get_kb_input},
     notify::{send_notify, start_notification_service}
 };
 
@@ -30,11 +30,13 @@ fn add_task_from_input(
     let hour: u32 = integer_input!() as u32;
     println!("Select the minute:");
     let min: u32 = integer_input!() as u32;
+    println!("How many minutes before do you want to be notified?");
+    let notif_time: i64 = integer_input!() as i64;
 
     if let Some(date) = Utc.with_ymd_and_hms(year, month, day, hour, min, 0).earliest() {
-        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let offset = FixedOffset::east_opt(3 * 3600).expect("");
         let date = date.with_timezone(&offset);
-        let res = add_task(&description, date);
+        let res = add_task(&description, date, notif_time);
         match res {
             Ok(_) => println!("{}", colored("Task added!", "green")),
             Err(_) => println!("{}", colored("Error!", "red")),
@@ -45,25 +47,7 @@ fn add_task_from_input(
 fn edit_task_from_input(
     task: &mut Task
 ) {
-    println!("Leave it empty if you don't want to edit.");
-    println!("Edit the description:");
-    let description: String = input!();
-    println!("Select the new day:");
-    let day: u32 = integer_input!() as u32;
-    println!("Select the new month:");
-    let month: u32 = integer_input!() as u32;
-    println!("Select the new year:");
-    let year: i32 = integer_input!();
-    println!("Select the new hour:");
-    let hour: u32 = integer_input!() as u32;
-    println!("Select the new minute:");
-    let min: u32 = integer_input!() as u32;
-
-    if let Some(date) = Utc.with_ymd_and_hms(year, month, day, hour, min, 0).earliest() {
-        let offset = FixedOffset::west_opt(3 * 3600).expect("");
-        let date = date.with_timezone(&offset);
-        task.update(&description, date);
-    } else { println!("{}", colored("Error!", "red")) }
+    task.update();
 }
 
 fn task_menu(text: &str, selected_task: i8) {
@@ -88,7 +72,7 @@ fn task_menu(text: &str, selected_task: i8) {
                             res.complete(selected_task as usize - 1);
                             println!("{}", colored("Task Updated!", "green"));
                             println!("Press any key to continue...");
-                            _ = input!();
+                            _ = get_kb_input();
                         },
                         Err(_) => println!("{}", colored("Error!", "red"))
                     }
@@ -103,7 +87,7 @@ fn task_menu(text: &str, selected_task: i8) {
                                 res.save();
                                 println!("{}", colored("Task Updated!", "green"));
                                 println!("Press any key to continue...");
-                                _ = input!();
+                                _ = get_kb_input();
 
                             } else { println!("{}", colored("Error!", "red")) }
                         },
@@ -111,7 +95,23 @@ fn task_menu(text: &str, selected_task: i8) {
                     }
                 },
                 3 => {
-                    // Delete the task
+                    options.print_ui_and_text(text);
+                    let result = get_tasks();
+                    match result {
+                        Ok(mut res) => {
+                            println!("{}", colored("Are you sure you want to delete the task? (y|n)", "red"));
+                            let opt = input!();
+                            if opt.to_lowercase().starts_with("y") {
+                                res.remove(selected_task as usize - 1);
+                                println!("{}", colored("Success!", "green"));
+                            } else {
+                                println!("{}", colored("Operation canceled!", "green"));
+                            }
+                                println!("Press any key to continue...");
+                                _ = get_kb_input();
+                        },
+                        Err(_) => println!("{}", colored("Error!", "red"))
+                    }
                 }
                 _ => show_tasks(),
             }

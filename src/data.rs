@@ -30,11 +30,13 @@ pub fn get_tasks() -> Result<TaskVec> {
     Ok(tasks)
 }
 
-pub fn add_task(description: &str, due_date: DateTime<FixedOffset>) -> Result<()> {
+pub fn add_task(
+    description: &str, due_date: DateTime<FixedOffset>, notification_time: i64
+) -> Result<()> {
     let result = get_tasks();
     match result {
         Ok(mut result) => {
-            result.push(Task::new(description, due_date));
+            result.push(Task::new(description, due_date, notification_time));
             write_tasks(&result);
         },
         Err(_) => println!("{}", colored("Erro!", "red"))

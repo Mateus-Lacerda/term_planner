@@ -1,11 +1,10 @@
 use std::fmt::{Display, Formatter, Result};
 
-use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
+use chrono::{DateTime, Datelike, FixedOffset, TimeDelta, TimeZone, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    data::write_tasks,
-    colors::colored
+    colors::colored, data::write_tasks, input, integer_input
 };
 
 // Code from serde documentation
@@ -88,8 +87,22 @@ impl TaskVec {
         }
     }
 
+    pub fn remove(&mut self, idx: usize) {
+        self.tasks.remove(idx);
+        self.reindex();
+        self.save();
+    }
+
     pub fn get(&mut self, idx: usize) -> Option<&mut Task> {
         self.tasks.get_mut(idx)
+    }
+
+    pub fn reindex(&mut self) {
+        let mut counter = 0;
+        for task in self.tasks.iter_mut() {
+            task.index = counter;
+            counter+=1;
+        }
     }
 
     pub fn save(&self) {
@@ -113,6 +126,7 @@ pub struct Task {
     #[serde(with = "my_date_format")]
     due_date: DateTime<FixedOffset>,
     index: usize,
+    notification_time: i64,
     pub completed: bool
 }
 
@@ -133,25 +147,61 @@ impl Task {
             format!("{}", colored(&task_text, "green"))
         }
     }
-    pub fn new(description: &str, due_date: DateTime<FixedOffset>) -> Self {
+
+    pub fn new(
+        description: &str, due_date: DateTime<FixedOffset>, notification_time: i64
+    ) -> Self {
         Task {
             index: 0,
             due_date: due_date,
             description: String::from(description),
-            completed: false
+            completed: false,
+            notification_time: notification_time
         }
     }
 
-    pub fn update(&mut self, description: &str, due_date: DateTime<FixedOffset>) {
+    pub fn update(
+        &mut self
+    ) {
+        println!("Leave it empty if you don't want to edit.");
+        println!("Edit the description:");
+        let description: String = input!(self.description);
+
+        let mut day = self.due_date.day();
+        let mut month = self.due_date.month();
+        let mut year = self.due_date.year();
+        let mut hour = self.due_date.hour();
+        let mut min = self.due_date.minute();
+        let mut notif_time = self.notification_time;
+
+        println!("Select the new day:");
+        day = integer_input!(format!("{}", day)) as u32;
+        println!("Select the new month:");
+        month = integer_input!(format!("{}", month)) as u32;
+        println!("Select the new year:");
+        year = integer_input!(format!("{}", year));
+        println!("Select the new hour:");
+        hour = integer_input!(format!("{}", hour)) as u32;
+        println!("Select the new minute:");
+        min = integer_input!(format!("{}", min)) as u32;
+        println!("Select the new notification time:");
+        notif_time = integer_input!(format!("{}", notif_time)) as i64;
+
+        if let Some(date) = Utc.with_ymd_and_hms(year, month, day, hour, min, 0).earliest() {
+            let offset = FixedOffset::east_opt(3 * 3600).expect("");
+            let date = date.with_timezone(&offset);
             self.description = description.to_string();
-            self.due_date = due_date;
+            self.due_date = date;
+            self.notification_time = notif_time;
+        } else { println!("{}", colored("Error!", "red")) }
+
     }
 
     pub fn is_due(&self) -> bool {
         let offset = FixedOffset::west_opt(3 * 3600).expect("");
         let now = Utc::now().with_timezone(&offset);
-        if let Some(td) = TimeDelta::new(120, 0) {
-            now - self.due_date >= td
+        if let Some(td) = TimeDelta::new(60 * self.notification_time, 0) {
+            self.due_date - now <= td
         } else { false }
     }
 }

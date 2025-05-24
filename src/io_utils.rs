@@ -3,39 +3,65 @@ use std::os::unix::io::AsRawFd;
 
 #[macro_export]
 macro_rules! input {
-    () => {{
-        use std::io::{self, Write};
-        print!("» ");
-        let mut buffer = String::new();
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut buffer).unwrap();
-        buffer.trim().to_string()
+    ($init:expr) => {{
+        use rustyline::DefaultEditor;
+
+        let mut rl = DefaultEditor::new()
+            .expect("Couldn't create the editor!");
+
+        let prompt = "» ";
+
+        let init_string = $init.to_string();
+        let left: &str = init_string.as_str();
+        let right: &str = "";
+
+        let line = rl.readline_with_initial(prompt, (left, right))
+            .unwrap_or_default();
+
+        line.trim().to_string()
     }};
+    () => {
+        $crate::input!("")
+    };
 }
 
 #[macro_export]
 macro_rules! integer_input {
-    () => {{
-        use std::io::{self, Write};
-        let number;
-        loop {
-            print!("» ");
-            let mut buffer = String::new();
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut buffer).unwrap();
-            let result = buffer.trim().to_string().parse::<i32>();
-            match result {
-                Ok(res) => {
-                    number = res;
-                    break
-                },
-                Err(_) => ()
+    // Chamado sem argumento: placeholder vazio
+    () => {
+        $crate::integer_input!("")
+    };
+    // Chamado com um &str inicial editável
+    ($init:expr) => {{
+        use rustyline::DefaultEditor;
+
+        let mut rl = DefaultEditor::new()
+            .expect("falha ao criar rustyline Editor");
+
+        let prompt = "» ";
+        // placeholder à esquerda do cursor
+        let init_string = $init.to_string();
+        let left: &str = init_string.as_str();
+        let right: &str = "";
+
+        let number: i32 = loop {
+            // readline_with_initial preenche a linha editável
+            let line = rl
+                .readline_with_initial(prompt, (left, right))
+                .unwrap_or_default();
+            // tenta parsear
+            match line.trim().parse::<i32>() {
+                Ok(n) => break n,
+                Err(_e) => {
+                    // caso de erro, apenas repete o loop
+                    // você pode imprimir uma mensagem se quiser:
+                    // eprintln!("Por favor, digite um número válido");
+                }
             }
-        }
+        };
         number
     }};
 }
-
 // Código do GPT
 #[repr(C)]
 #[derive(Clone)]
