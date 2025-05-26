@@ -1,11 +1,9 @@
 use std::vec::Vec;
 
-use chrono::{FixedOffset, TimeZone, Utc};
-
 use term_planner::{
     colors::colored,
     data::{add_task, get_tasks},
-    input, integer_input,
+    input,
     io_utils::{clean_terminal, get_kb_input},
     notify::{run_notification_service, send_notify},
     options::Options,
@@ -13,34 +11,10 @@ use term_planner::{
 };
 
 fn add_task_from_input() {
-    println!("Describe your task:");
-    let description: String = input!();
-    println!("Select the day:");
-    let day: u32 = integer_input!() as u32;
-    println!("Select the month:");
-    let month: u32 = integer_input!() as u32;
-    println!("Select the year:");
-    let year: i32 = integer_input!();
-    println!("Select the hour:");
-    let hour: u32 = integer_input!() as u32;
-    println!("Select the minute:");
-    let min: u32 = integer_input!() as u32;
-    println!("How many minutes before do you want to be notified?");
-    let notif_time: i64 = integer_input!() as i64;
-
-    if let Some(date) = Utc
-        .with_ymd_and_hms(year, month, day, hour, min, 0)
-        .earliest()
-    {
-        let offset = FixedOffset::east_opt(3 * 3600).expect("");
-        let date = date.with_timezone(&offset);
-        let res = add_task(&description, date, notif_time);
-        match res {
-            Ok(_) => println!("{}", colored("Task added!", "green")),
-            Err(_) => println!("{}", colored("Error!", "red")),
-        }
-    } else {
-        println!("{}", colored("Error!", "red"))
+    let res = add_task();
+    match res {
+        Ok(_) => println!("{}", colored("Task added!", "green")),
+        Err(_) => println!("{}", colored("Error!", "red")),
     }
 }
 

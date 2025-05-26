@@ -1,7 +1,6 @@
 use std::fs::{read_to_string, write};
 use std::path::PathBuf;
 
-use chrono::{DateTime, FixedOffset};
 use dirs::config_dir;
 use serde_json::{Result, from_str, to_string_pretty};
 
@@ -36,15 +35,11 @@ pub fn get_tasks() -> Result<TaskVec> {
     Ok(tasks)
 }
 
-pub fn add_task(
-    description: &str,
-    due_date: DateTime<FixedOffset>,
-    notification_time: i64,
-) -> Result<()> {
+pub fn add_task() -> Result<()> {
     let result = get_tasks();
     match result {
         Ok(mut result) => {
-            result.push(Task::new(description, due_date, notification_time));
+            result.push(Task::new());
             write_tasks(&result);
         }
         Err(_) => println!("{}", colored("Erro!", "red")),
