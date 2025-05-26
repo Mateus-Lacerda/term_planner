@@ -55,10 +55,9 @@ jobs:
           set -e
 
       - name: Update Cargo.lock
-        steps:
-          - uses: actions-rs/cargo@v1
-            with:
-              command: update
+        uses: actions-rs/cargo@v1
+        with:
+          command: update
 
       - name: Commit bump and push tag
         if: steps.bumpver.outputs.new != steps.bumpver.outputs.old
