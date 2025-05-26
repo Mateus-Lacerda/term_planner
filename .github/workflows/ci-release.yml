@@ -43,4 +43,5 @@ jobs:
           cargo release "${{ steps.bump.outputs.level }}" \
             --execute \
             --no-publish \
-            --push
+            --push \
+            --yes
