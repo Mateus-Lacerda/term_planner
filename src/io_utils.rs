@@ -6,8 +6,7 @@ macro_rules! input {
     ($init:expr) => {{
         use rustyline::DefaultEditor;
 
-        let mut rl = DefaultEditor::new()
-            .expect("Couldn't create the editor!");
+        let mut rl = DefaultEditor::new().expect("Couldn't create the editor!");
 
         let prompt = "» ";
 
@@ -15,7 +14,8 @@ macro_rules! input {
         let left: &str = init_string.as_str();
         let right: &str = "";
 
-        let line = rl.readline_with_initial(prompt, (left, right))
+        let line = rl
+            .readline_with_initial(prompt, (left, right))
             .unwrap_or_default();
 
         line.trim().to_string()
@@ -35,8 +35,7 @@ macro_rules! integer_input {
     ($init:expr) => {{
         use rustyline::DefaultEditor;
 
-        let mut rl = DefaultEditor::new()
-            .expect("falha ao criar rustyline Editor");
+        let mut rl = DefaultEditor::new().expect("falha ao criar rustyline Editor");
 
         let prompt = "» ";
         // placeholder à esquerda do cursor
@@ -78,7 +77,11 @@ struct Termios {
 
 unsafe extern "C" {
     fn tcgetattr(fd: libc::c_int, termios_p: *mut Termios) -> libc::c_int;
-    fn tcsetattr(fd: libc::c_int, optional_actions: libc::c_int, termios_p: *const Termios) -> libc::c_int;
+    fn tcsetattr(
+        fd: libc::c_int,
+        optional_actions: libc::c_int,
+        termios_p: *const Termios,
+    ) -> libc::c_int;
 }
 
 fn set_raw_mode(old: &mut Termios) -> io::Result<()> {
@@ -91,7 +94,7 @@ fn set_raw_mode(old: &mut Termios) -> io::Result<()> {
         // desliga ECHO, ICANON, sinal e extensão
         raw.c_lflag &= !(libc::ECHO | libc::ICANON | libc::ISIG | libc::IEXTEN);
         // tempo de leitura mínimo = 1 caractere
-        raw.c_cc[libc::VMIN]  = 1;
+        raw.c_cc[libc::VMIN] = 1;
         raw.c_cc[libc::VTIME] = 0;
         if tcsetattr(fd, libc::TCSANOW, &raw) != 0 {
             return Err(io::Error::last_os_error());
@@ -127,7 +130,7 @@ pub fn get_kb_input() -> usize {
             [b'[', b'B'] => 2, // ↓
             [b'[', b'D'] => 3, // ←
             [b'[', b'C'] => 4, // →
-            _            => 0,
+            _ => 0,
         }
     } else {
         // tecla “comum”: devolve byte ascii como usize
@@ -139,4 +142,6 @@ pub fn get_kb_input() -> usize {
     code
 }
 
-pub fn clean_terminal() { print!("\x1B[2J\x1B[H"); }
+pub fn clean_terminal() {
+    print!("\x1B[2J\x1B[H");
+}

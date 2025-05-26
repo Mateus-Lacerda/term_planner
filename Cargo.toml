@@ -2,6 +2,9 @@
 name = "term_planner"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+repository = "https://github.com/Mateus-Lacerda/term_planner"
+rust-version = "1.86.0"
 
 [dependencies]
 chrono = "0.4.41"

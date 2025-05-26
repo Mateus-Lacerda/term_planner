@@ -2,28 +2,18 @@ use std::fs::{read_to_string, write};
 use std::path::PathBuf;
 
 use chrono::{DateTime, FixedOffset};
-use serde_json::{
-    to_string_pretty,
-    from_str,
-    Result,
-};
 use dirs::config_dir;
-
+use serde_json::{Result, from_str, to_string_pretty};
 
 use crate::{
     colors::colored,
-    task::{
-        Task,
-        TaskVec,
-    }
+    task::{Task, TaskVec},
 };
 
 fn tasks_file_path() -> PathBuf {
-    let mut dir = config_dir()
-        .expect("Não conseguiu descobrir XDG config dir");
+    let mut dir = config_dir().expect("Não conseguiu descobrir XDG config dir");
     dir.push("term_planner");
-    std::fs::create_dir_all(&dir)
-        .expect("Falha ao criar config dir");
+    std::fs::create_dir_all(&dir).expect("Falha ao criar config dir");
     dir.push("tasks.json");
     dir
 }
@@ -32,15 +22,14 @@ pub fn write_tasks(tasks: &TaskVec) {
     let ser = to_string_pretty(tasks);
     match ser {
         Ok(ser) => _ = write(tasks_file_path(), ser),
-        Err(_) => println!("{}", colored("Erro!", "red"))
+        Err(_) => println!("{}", colored("Erro!", "red")),
     }
 }
 
 pub fn get_tasks() -> Result<TaskVec> {
     let path = tasks_file_path();
     if !path.exists() {
-        write(&path, "{\"tasks\": []}")
-            .expect("Falha ao criar tasks.json inicial");
+        write(&path, "{\"tasks\": []}").expect("Falha ao criar tasks.json inicial");
     }
     let tasks = read_to_string(path).expect("Couldn't find or load that file.");
     let tasks: TaskVec = from_str(&tasks)?;
@@ -48,15 +37,17 @@ pub fn get_tasks() -> Result<TaskVec> {
 }
 
 pub fn add_task(
-    description: &str, due_date: DateTime<FixedOffset>, notification_time: i64
+    description: &str,
+    due_date: DateTime<FixedOffset>,
+    notification_time: i64,
 ) -> Result<()> {
     let result = get_tasks();
     match result {
         Ok(mut result) => {
             result.push(Task::new(description, due_date, notification_time));
             write_tasks(&result);
-        },
-        Err(_) => println!("{}", colored("Erro!", "red"))
+        }
+        Err(_) => println!("{}", colored("Erro!", "red")),
     }
 
     Ok(())
