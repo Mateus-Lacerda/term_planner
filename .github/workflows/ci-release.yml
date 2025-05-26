@@ -13,12 +13,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
       - name: Determine bump level
         id: bump
         run: |
@@ -36,8 +30,8 @@ jobs:
       - name: Bump Cargo.toml version
         id: bumpver
         run: |
+          set +e
           OLD=$(grep '^version =' Cargo.toml | cut -d\" -f2) || OLD="0.0.0"
-
           IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD" || true
 
           case "${{ steps.bump.outputs.level }}" in
@@ -54,6 +48,7 @@ jobs:
             sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$NEW\"/" Cargo.toml \
               || echo "sed failed, but continuing"
           fi
+          set -e
 
       - name: Commit bump and push tag
         if: steps.bumpver.outputs.new != steps.bumpver.outputs.old
@@ -66,3 +61,4 @@ jobs:
           git commit -m "chore: bump version ${{ steps.bumpver.outputs.new }}"
           git tag -a "v${{ steps.bumpver.outputs.new }}" -m "Release v${{ steps.bumpver.outputs.new }}"
           git push origin main --follow-tags
+
