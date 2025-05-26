@@ -4,6 +4,6 @@ pub fn colored(text: &str, color: &str) -> String {
         "green" => format!("\x1b[32m{text}\x1b[0m"),
         "blue" => format!("\x1b[34m{text}\x1b[0m"),
         "red" => format!("\x1b[31m{text}\x1b[0m"),
-        _ => format!("{text}")
+        _ => text.to_string(),
     }
 }

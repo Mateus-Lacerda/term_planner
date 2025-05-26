@@ -3,16 +3,14 @@ use std::fmt::{Display, Formatter, Result};
 use chrono::{DateTime, Datelike, FixedOffset, TimeDelta, TimeZone, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    colors::colored, data::write_tasks, input, integer_input
-};
+use crate::{colors::colored, data::write_tasks, input, integer_input};
 
 // Code from serde documentation
 mod my_date_format {
     use chrono::{DateTime, FixedOffset, NaiveDateTime};
-    use serde::{self, Deserialize, Serializer, Deserializer};
+    use serde::{self, Deserialize, Deserializer, Serializer};
 
-    const FORMAT: &'static str = "%Y-%m-%d %H:%M";
+    const FORMAT: &str = "%Y-%m-%d %H:%M";
 
     // The signature of a serialize_with function must follow the pattern:
     //
@@ -21,10 +19,7 @@ mod my_date_format {
     //        S: Serializer
     //
     // although it may also be generic over the input types T.
-    pub fn serialize<S>(
-        date: &DateTime<FixedOffset>,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(date: &DateTime<FixedOffset>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -39,22 +34,22 @@ mod my_date_format {
     //        D: Deserializer<'de>
     //
     // although it may also be generic over the output types T.
-    pub fn deserialize<'de, D>(
-        deserializer: D,
-    ) -> Result<DateTime<FixedOffset>, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime<FixedOffset>, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
         let dt = NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
         let offset = FixedOffset::west_opt(3 * 3600).expect("");
-        Ok(DateTime::<FixedOffset>::from_naive_utc_and_offset(dt, offset))
+        Ok(DateTime::<FixedOffset>::from_naive_utc_and_offset(
+            dt, offset,
+        ))
     }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TaskVec {
-    pub tasks: Vec<Task>
+    pub tasks: Vec<Task>,
 }
 
 impl TaskVec {
@@ -74,13 +69,17 @@ impl TaskVec {
         self.tasks.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() > 0
+    }
+
     pub fn get_as_text(&self, idx: usize) -> String {
         if let Some(t) = self.tasks.get(idx) {
-            let task = format!("{} - ({})", t.description, t.due_date.to_string());
+            let task = format!("{} - ({})", t.description, t.due_date);
             if !t.completed {
-                format!("{task}")
+                task.to_string()
             } else {
-                format!("{}", colored(&task, "green"))
+                colored(&task, "green").to_string()
             }
         } else {
             String::from("There was an error reading the task!")
@@ -98,26 +97,23 @@ impl TaskVec {
     }
 
     pub fn reindex(&mut self) {
-        let mut counter = 0;
-        for task in self.tasks.iter_mut() {
+        for (counter, task) in self.tasks.iter_mut().enumerate() {
             task.index = counter;
-            counter+=1;
         }
     }
 
     pub fn save(&self) {
-        write_tasks(&self);
+        write_tasks(self);
     }
 
     pub fn change_status(&mut self, idx: usize) {
         if let Some(t) = &mut self.tasks.get_mut(idx) {
             t.completed = !t.completed;
-            write_tasks(&self);
+            write_tasks(self);
         } else {
             println!("{}", colored("There was an error reading the task!", "red"));
         }
     }
-
 }
 
 #[derive(Serialize, Deserialize)]
@@ -127,42 +123,40 @@ pub struct Task {
     due_date: DateTime<FixedOffset>,
     index: usize,
     notification_time: i64,
-    pub completed: bool
+    pub completed: bool,
 }
 
 impl Display for Task {
-    fn fmt(&self, _f: &mut Formatter<'_>) -> Result { 
-        println!("{}", self.get_as_text());
-        Ok(())
+    fn fmt(&self, _f: &mut Formatter<'_>) -> Result {
+        writeln!(_f, "{}", self.get_as_text())
     }
 }
 
 impl Task {
     pub fn get_as_text(&self) -> String {
-
-        let task_text = format!("{} - ({})", self.description, self.due_date.format("%d/%m/%Y %H:%M").to_string());
+        let task_text = format!(
+            "{} - ({})",
+            self.description,
+            self.due_date.format("%d/%m/%Y %H:%M")
+        );
         if !self.completed {
-            format!("{task_text}")
+            task_text.to_string()
         } else {
-            format!("{}", colored(&task_text, "green"))
+            colored(&task_text, "green").to_string()
         }
     }
 
-    pub fn new(
-        description: &str, due_date: DateTime<FixedOffset>, notification_time: i64
-    ) -> Self {
+    pub fn new(description: &str, due_date: DateTime<FixedOffset>, notification_time: i64) -> Self {
         Task {
             index: 0,
-            due_date: due_date,
+            due_date,
             description: String::from(description),
             completed: false,
-            notification_time: notification_time
+            notification_time,
         }
     }
 
-    pub fn update(
-        &mut self
-    ) {
+    pub fn update(&mut self) {
         println!("Leave it empty if you don't want to edit.");
         println!("Edit the description:");
         let description: String = input!(self.description);
@@ -187,14 +181,18 @@ impl Task {
         println!("Select the new notification time:");
         notif_time = integer_input!(format!("{}", notif_time)) as i64;
 
-        if let Some(date) = Utc.with_ymd_and_hms(year, month, day, hour, min, 0).earliest() {
+        if let Some(date) = Utc
+            .with_ymd_and_hms(year, month, day, hour, min, 0)
+            .earliest()
+        {
             let offset = FixedOffset::east_opt(3 * 3600).expect("");
             let date = date.with_timezone(&offset);
             self.description = description.to_string();
             self.due_date = date;
             self.notification_time = notif_time;
-        } else { println!("{}", colored("Error!", "red")) }
-
+        } else {
+            println!("{}", colored("Error!", "red"))
+        }
     }
 
     pub fn is_due(&self) -> bool {
@@ -202,6 +200,8 @@ impl Task {
         let now = Utc::now().with_timezone(&offset);
         if let Some(td) = TimeDelta::new(60 * self.notification_time, 0) {
             self.due_date - now <= td
-        } else { false }
+        } else {
+            false
+        }
     }
 }
