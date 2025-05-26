@@ -1,11 +1,12 @@
-permissions:
-  contents: write
-
-name: CI & Tag Release
+name: CI, Tag & Release
 
 on:
   push:
     branches: [ main ]
+
+permissions:
+  contents: write
+  actions: write
 
 jobs:
   bump-and-tag:
@@ -65,3 +66,9 @@ jobs:
           git tag -a "v${{ steps.bumpver.outputs.new }}" -m "Release v${{ steps.bumpver.outputs.new }}"
           git push origin main --follow-tags
 
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.bumpver.outputs.new && format('v{}', steps.bumpver.outputs.new) }}
+          name: Release v${{ steps.bumpver.outputs.new }}
+          token: ${{ secrets.GITHUB_TOKEN }}
