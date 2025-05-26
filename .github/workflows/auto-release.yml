@@ -1,0 +1,51 @@
+name: "Auto Release"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: "Bump version & publish"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-release
+        run: cargo install cargo-release --locked
+
+      - name: Determine bump level from branch name
+        id: bump
+        run: |
+          BRANCH_NAME="${{ github.event.head_commit.message }}"  
+          if [[ "${BRANCH_NAME}" =~ feature/ ]]; then
+            echo "level=minor" >> $GITHUB_OUTPUT
+          elif [[ "${BRANCH_NAME}" =~ fix/ ]]; then
+            echo "level=patch" >> $GITHUB_OUTPUT
+          elif [[ "${BRANCH_NAME}" =~ release/ ]]; then
+            echo "level=major" >> $GITHUB_OUTPUT
+          else
+            echo "level=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump & tag
+        run: |
+          cargo release "${{ steps.bump.outputs.level }}" \
+            --execute \
+            --no-publish
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
