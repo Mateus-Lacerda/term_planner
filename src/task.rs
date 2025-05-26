@@ -132,6 +132,20 @@ impl Display for Task {
     }
 }
 
+impl Default for Task {
+    fn default() -> Self {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let now = Utc::now().with_timezone(&offset);
+        Task {
+            description: String::from(""),
+            due_date: now,
+            index: 0,
+            notification_time: 10,
+            completed: false,
+        }
+    }
+}
+
 impl Task {
     pub fn get_as_text(&self) -> String {
         let task_text = format!(
@@ -146,13 +160,40 @@ impl Task {
         }
     }
 
-    pub fn new(description: &str, due_date: DateTime<FixedOffset>, notification_time: i64) -> Self {
-        Task {
-            index: 0,
-            due_date,
-            description: String::from(description),
-            completed: false,
-            notification_time,
+    pub fn new() -> Self {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let now = Utc::now().with_timezone(&offset);
+
+        println!("Describe your task:");
+        let description: String = input!();
+        println!("Select the day:");
+        let day: u32 = integer_input!(now.day().to_string()) as u32;
+        println!("Select the month:");
+        let month: u32 = integer_input!(now.month().to_string()) as u32;
+        println!("Select the year:");
+        let year: i32 = integer_input!(now.year().to_string());
+        println!("Select the hour:");
+        let hour: u32 = integer_input!(now.hour().to_string()) as u32;
+        println!("Select the minute:");
+        let min: u32 = integer_input!(now.minute().to_string()) as u32;
+        println!("How many minutes before do you want to be notified?");
+        let notification_time: i64 = integer_input!(10) as i64;
+
+        if let Some(due_date) = Utc
+            .with_ymd_and_hms(year, month, day, hour, min, 0)
+            .earliest()
+        {
+            let offset = FixedOffset::east_opt(3 * 3600).expect("");
+            let due_date = due_date.with_timezone(&offset);
+            Task {
+                index: 0,
+                due_date,
+                description,
+                completed: false,
+                notification_time,
+            }
+        } else {
+            Task::default()
         }
     }
 
@@ -160,26 +201,18 @@ impl Task {
         println!("Leave it empty if you don't want to edit.");
         println!("Edit the description:");
         let description: String = input!(self.description);
-
-        let mut day = self.due_date.day();
-        let mut month = self.due_date.month();
-        let mut year = self.due_date.year();
-        let mut hour = self.due_date.hour();
-        let mut min = self.due_date.minute();
-        let mut notif_time = self.notification_time;
-
         println!("Select the new day:");
-        day = integer_input!(format!("{}", day)) as u32;
+        let day = integer_input!(self.due_date.day().to_string()) as u32;
         println!("Select the new month:");
-        month = integer_input!(format!("{}", month)) as u32;
+        let month = integer_input!(self.due_date.month().to_string()) as u32;
         println!("Select the new year:");
-        year = integer_input!(format!("{}", year));
+        let year = integer_input!(self.due_date.year().to_string());
         println!("Select the new hour:");
-        hour = integer_input!(format!("{}", hour)) as u32;
+        let hour = integer_input!(self.due_date.hour().to_string()) as u32;
         println!("Select the new minute:");
-        min = integer_input!(format!("{}", min)) as u32;
+        let min = integer_input!(self.due_date.minute().to_string()) as u32;
         println!("Select the new notification time:");
-        notif_time = integer_input!(format!("{}", notif_time)) as i64;
+        let notif_time = integer_input!(self.notification_time) as i64;
 
         if let Some(date) = Utc
             .with_ymd_and_hms(year, month, day, hour, min, 0)

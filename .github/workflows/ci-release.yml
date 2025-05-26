@@ -36,21 +36,23 @@ jobs:
       - name: Bump Cargo.toml version
         id: bumpver
         run: |
-          OLD=$(grep '^version =' Cargo.toml | cut -d\" -f2)
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD"
+          OLD=$(grep '^version =' Cargo.toml | cut -d\" -f2) || OLD="0.0.0"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD" || true
 
           case "${{ steps.bump.outputs.level }}" in
             major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
             minor) ((MINOR++)); PATCH=0 ;;
             *)     ((PATCH++)) ;;
           esac
-
           NEW="$MAJOR.$MINOR.$PATCH"
+
           echo "old=$OLD" >> $GITHUB_OUTPUT
           echo "new=$NEW" >> $GITHUB_OUTPUT
 
           if [[ "$NEW" != "$OLD" ]]; then
-            sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$NEW\"/" Cargo.toml
+            sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$NEW\"/" Cargo.toml \
+              || echo "sed failed, but continuing"
           fi
 
       - name: Commit bump and push tag
