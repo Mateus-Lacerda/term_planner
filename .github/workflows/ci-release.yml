@@ -1,0 +1,46 @@
+name: CI & Tag Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  bump-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-release
+        run: cargo install cargo-release --locked
+
+      - name: Determine bump level
+        id: bump
+        run: |
+          BRANCH=${GITHUB_REF##*/}
+          if [[ "$BRANCH" =~ feature/ ]]; then
+            echo "level=minor" >> $GITHUB_OUTPUT
+          elif [[ "$BRANCH" =~ fix/ ]]; then
+            echo "level=patch" >> $GITHUB_OUTPUT
+          elif [[ "$BRANCH" =~ breaking/ ]]; then
+            echo "level=major" >> $GITHUB_OUTPUT
+          else
+            echo "level=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump version & push tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cargo release "${{ steps.bump.outputs.level }}" \
+            --execute \
+            --no-publish \
+            --push
