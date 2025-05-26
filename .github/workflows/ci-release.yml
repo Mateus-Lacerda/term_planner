@@ -19,29 +19,34 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install cargo-release
-        run: cargo install cargo-release --locked
-
-      - name: Determine bump level
-        id: bump
+      - name: Install cargo-edit
         run: |
-          BRANCH=${GITHUB_REF##*/}
-          if [[ "$BRANCH" =~ feature/ ]]; then
-            echo "level=minor" >> $GITHUB_OUTPUT
-          elif [[ "$BRANCH" =~ fix/ ]]; then
-            echo "level=patch" >> $GITHUB_OUTPUT
-          elif [[ "$BRANCH" =~ breaking/ ]]; then
-            echo "level=major" >> $GITHUB_OUTPUT
-          else
-            echo "level=patch" >> $GITHUB_OUTPUT
-          fi
+          cargo install cargo-edit --locked
 
-      - name: Bump version & push tag
+      - name: Bump Cargo.toml version
+        id: bumpver
+        run: |
+          LEVEL=${{ steps.bump.outputs.level }}
+          # pega versão atual, ex: 0.1.0
+          OLD=$(grep '^version =' Cargo.toml | cut -d\" -f2)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD"
+          case "$LEVEL" in
+            major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
+            minor) ((MINOR++)); PATCH=0 ;;
+            patch) ((PATCH++)) ;;
+          esac
+          NEW="$MAJOR.$MINOR.$PATCH"
+          echo "old=$OLD" >> $GITHUB_OUTPUT
+          echo "new=$NEW" >> $GITHUB_OUTPUT
+          cargo set-version "$NEW"
+
+      - name: Commit bump and push tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cargo release "${{ steps.bump.outputs.level }}" \
-            --execute \
-            --no-publish \
-            --push \
-            --yes
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Cargo.toml
+          git commit -m "chore: bump version ${{ steps.bumpver.outputs.new }}"
+          git tag -a "v${{ steps.bumpver.outputs.new }}" -m "Release v${{ steps.bumpver.outputs.new }}"
+          git push origin main --follow-tags
