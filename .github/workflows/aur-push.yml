@@ -1,0 +1,64 @@
+name: "Update AUR Package on Release"
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  bump-aur:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Update pacman and install base-devel
+        run: |
+          pacman -Sy --noconfirm --needed base-devel git
+
+      - name: Checkout upstream
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: vars
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          sudo pacman -S --noconfirm --needed \
+            git sed makepkg base-devel
+
+      - name: Prepare SSH key for AUR
+        env:
+          AUR_SSH: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$AUR_SSH" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Clone AUR repo
+        run: |
+          git clone ssh://aur@aur.archlinux.org/term_planner.git aur
+        working-directory: ${{ github.workspace }}
+
+      - name: Update PKGBUILD in AUR
+        run: |
+          pushd aur
+          sed -i "s/^pkgver=.*/pkgver=${{ steps.vars.outputs.version }}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          makepkg --printsrcinfo > .SRCINFO
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add PKGBUILD .SRCINFO
+          git commit -m "Update to version ${{ steps.vars.outputs.version }}"
+          git push
+          popd
+
+      - name: Done
+        run: echo "AUR term_planner bumped to ${{ steps.vars.outputs.version }}"
+
