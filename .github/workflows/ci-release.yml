@@ -19,9 +19,6 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install cargo-edit
-        run: cargo install cargo-edit --locked
-
       - name: Determine bump level
         id: bump
         run: |
@@ -49,12 +46,11 @@ jobs:
           esac
 
           NEW="$MAJOR.$MINOR.$PATCH"
-
           echo "old=$OLD" >> $GITHUB_OUTPUT
           echo "new=$NEW" >> $GITHUB_OUTPUT
 
           if [[ "$NEW" != "$OLD" ]]; then
-            cargo set-version "$NEW"
+            sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$NEW\"/" Cargo.toml
           fi
 
       - name: Commit bump and push tag
