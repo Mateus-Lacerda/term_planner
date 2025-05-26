@@ -132,6 +132,20 @@ impl Display for Task {
     }
 }
 
+impl Default for Task {
+    fn default() -> Self {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let now = Utc::now().with_timezone(&offset);
+        Task {
+            description: String::from(""),
+            due_date: now,
+            index: 0,
+            notification_time: 10,
+            completed: false,
+        }
+    }
+}
+
 impl Task {
     pub fn get_as_text(&self) -> String {
         let task_text = format!(
@@ -165,17 +179,21 @@ impl Task {
         println!("How many minutes before do you want to be notified?");
         let notification_time: i64 = integer_input!(10) as i64;
 
-        let due_date = Utc
+        if let Some(due_date) = Utc
             .with_ymd_and_hms(year, month, day, hour, min, 0)
-            .earliest().expect("An unexpected error has occured!");
-        let offset = FixedOffset::east_opt(3 * 3600).expect("");
-        let due_date = due_date.with_timezone(&offset);
-        Task {
-            index: 0,
-            due_date,
-            description: String::from(description),
-            completed: false,
-            notification_time,
+            .earliest()
+        {
+            let offset = FixedOffset::east_opt(3 * 3600).expect("");
+            let due_date = due_date.with_timezone(&offset);
+            Task {
+                index: 0,
+                due_date,
+                description,
+                completed: false,
+                notification_time,
+            }
+        } else {
+            Task::default()
         }
     }
 
