@@ -66,7 +66,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Cargo.toml
+          git add Cargo.toml Cargo.lock
           git commit -m "chore: bump version ${{ steps.bumpver.outputs.new }}"
           git tag -a "v${{ steps.bumpver.outputs.new }}" -m "Release v${{ steps.bumpver.outputs.new }}"
           git push origin main --follow-tags
