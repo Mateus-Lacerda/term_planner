@@ -70,7 +70,7 @@ impl TaskVec {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() > 0
+        self.tasks.is_empty()
     }
 
     pub fn get_as_text(&self, idx: usize) -> String {
