@@ -8,7 +8,7 @@ use libc::exit;
 use crate::{
     colors::colored,
     io_utils::{clean_terminal, get_kb_input},
-    task::TaskVec,
+    resources::Resources,
 };
 
 pub struct Options {
@@ -121,7 +121,7 @@ impl Options {
         }
     }
 
-    pub fn build_from_tasks(&mut self, options: TaskVec) {
+    pub fn build_from_tasks(&mut self, options: Resources) {
         let end = options.len();
         let rng = Range {
             start: 1,
