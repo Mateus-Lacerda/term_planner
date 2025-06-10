@@ -2,7 +2,7 @@ use std::vec::Vec;
 
 use crate::{
     colors::colored,
-    data::{add_task, get_tasks},
+    data::{add_schedule, add_task, get_resources},
     input,
     io_utils::get_kb_input,
     options::Options,
@@ -10,27 +10,92 @@ use crate::{
 
 enum Resource {
     TaskResource,
-    ScheduleResource
+    ScheduleResource,
 }
 
 fn add_from_input(resource: Resource) {
     match resource {
         Resource::TaskResource => {
-                let res = add_task();
-                match res {
-                    Ok(_) => println!("{}", colored("Task added!", "green")),
-                    Err(_) => println!("{}", colored("Error!", "red")),
-                }
+            let res = add_task();
+            match res {
+                Ok(_) => println!("{}", colored("Task added!", "green")),
+                Err(_) => println!("{}", colored("Error!", "red")),
             }
-        Resource::ScheduleResource => todo!(),
+        }
+        Resource::ScheduleResource => {
+            let res = add_schedule();
+            match res {
+                Ok(_) => println!("{}", colored("Schedule added!", "green")),
+                Err(_) => println!("{}", colored("Error!", "red")),
+            }
+        }
     }
 }
 
+fn schedule_menu(text: &str, selected_schedule: i8) {
+    let mut options = Options::default();
+    let opt_lst = Vec::from([String::from("Edit."), String::from("Delete.")]);
+
+    options.build(opt_lst);
+
+    let selected = options.print_option(text);
+    match options.last_move {
+        4 => match selected {
+            1 => {
+                options.print_ui_and_text(text);
+                let result = get_resources();
+                match result {
+                    Ok(mut res) => {
+                        if let Some(t) = res.get_schedule(selected_schedule as usize - 1) {
+                            t.update();
+                            res.save();
+                            println!("{}", colored("Schedule updated!", "green"));
+                            println!("Press any key to continue...");
+                            _ = get_kb_input();
+                        } else {
+                            println!("{}", colored("Error!", "red"))
+                        }
+                    }
+                    Err(_) => println!("{}", colored("Error!", "red")),
+                }
+            }
+            2 => {
+                options.print_ui_and_text(text);
+                let result = get_resources();
+                match result {
+                    Ok(mut res) => {
+                        println!(
+                            "{}",
+                            colored("Are you sure you want to delete the schedule? (y|n)", "red")
+                        );
+                        let opt = input!();
+                        if opt.to_lowercase().starts_with("y") {
+                            res.remove_schedule(selected_schedule as usize - 1);
+                            println!("{}", colored("Success!", "green"));
+                        } else {
+                            println!("{}", colored("Operation canceled!", "green"));
+                        }
+                        println!("Press any key to continue...");
+                        _ = get_kb_input();
+                    }
+                    Err(_) => println!("{}", colored("Error!", "red")),
+                }
+            }
+            _ => show_schedules(),
+        },
+        _ => show_schedules(),
+    }
+    main_menu()
+}
+
 fn task_menu(text: &str, selected_task: i8) {
-    let result = get_tasks();
+    let result = get_resources();
     let d_or_ud = match result {
         Ok(mut res) => {
-            let comp = res.get(selected_task as usize - 1).expect("").completed;
+            let comp = res
+                .get_task(selected_task as usize - 1)
+                .expect("")
+                .completed;
             if comp { "undone" } else { "done" }
         }
         Err(_) => "",
@@ -53,11 +118,11 @@ fn task_menu(text: &str, selected_task: i8) {
     match options.last_move {
         4 => match selected {
             1 => {
-                let result = get_tasks();
+                let result = get_resources();
                 match result {
                     Ok(mut res) => {
-                        res.change_status(selected_task as usize - 1);
-                        println!("{}", colored("Task Updated!", "green"));
+                        res.change_task_status(selected_task as usize - 1);
+                        println!("{}", colored("Task updated!", "green"));
                         println!("Press any key to continue...");
                         _ = get_kb_input();
                     }
@@ -66,10 +131,10 @@ fn task_menu(text: &str, selected_task: i8) {
             }
             2 => {
                 options.print_ui_and_text(text);
-                let result = get_tasks();
+                let result = get_resources();
                 match result {
                     Ok(mut res) => {
-                        if let Some(t) = res.get(selected_task as usize - 1) {
+                        if let Some(t) = res.get_task(selected_task as usize - 1) {
                             t.update();
                             res.save();
                             println!("{}", colored("Task Updated!", "green"));
@@ -84,7 +149,7 @@ fn task_menu(text: &str, selected_task: i8) {
             }
             3 => {
                 options.print_ui_and_text(text);
-                let result = get_tasks();
+                let result = get_resources();
                 match result {
                     Ok(mut res) => {
                         println!(
@@ -93,7 +158,7 @@ fn task_menu(text: &str, selected_task: i8) {
                         );
                         let opt = input!();
                         if opt.to_lowercase().starts_with("y") {
-                            res.remove(selected_task as usize - 1);
+                            res.remove_task(selected_task as usize - 1);
                             println!("{}", colored("Success!", "green"));
                         } else {
                             println!("{}", colored("Operation canceled!", "green"));
@@ -112,10 +177,10 @@ fn task_menu(text: &str, selected_task: i8) {
 }
 
 fn show_tasks() {
-    let result = get_tasks();
+    let result = get_resources();
     match result {
         Ok(res) => {
-            if res.is_empty() {
+            if res.is_tasks_empty() {
                 println!(
                     "{}",
                     colored("Now it's the time you add some tasks!", "green")
@@ -129,6 +194,32 @@ fn show_tasks() {
             let res = options.print_option("Your tasks:");
             match options.last_move {
                 4 => task_menu(options.get_text_from_index(res as usize), res),
+                3 => main_menu(),
+                _ => println!("{}", options.last_move),
+            }
+        }
+        Err(_) => println!("{}", colored("Error!", "red")),
+    }
+}
+
+fn show_schedules() {
+    let result = get_resources();
+    match result {
+        Ok(res) => {
+            if res.is_schedules_empty() {
+                println!(
+                    "{}",
+                    colored("Now it's the time you add some schedules!", "green")
+                );
+                println!("Press any key to continue...");
+                _ = get_kb_input();
+                main_menu();
+            }
+            let mut options = Options::default();
+            options.build_from_schedules(res);
+            let res = options.print_option("Your tasks:");
+            match options.last_move {
+                4 => schedule_menu(options.get_text_from_index(res as usize), res),
                 3 => main_menu(),
                 _ => println!("{}", options.last_move),
             }
@@ -157,12 +248,15 @@ fn tasks_menu() {
 fn schedules_menu() {
     let text = "Manage your schedules:";
     let mut options = Options::default();
-    let opt_lst = Vec::from([String::from("Check schedules"), String::from("Add schedule")]);
+    let opt_lst = Vec::from([
+        String::from("Check schedules"),
+        String::from("Add schedule"),
+    ]);
 
     options.build(opt_lst);
     let selected = options.print_option(text);
     match selected {
-        1 => show_tasks(),
+        1 => show_schedules(),
         2 => {
             add_from_input(Resource::ScheduleResource);
             main_menu();
@@ -172,9 +266,12 @@ fn schedules_menu() {
 }
 
 pub fn main_menu() {
-    let text = "  Main Menu";
+    let text = "󰍜 Main Menu";
     let mut options = Options::default();
-    let opt_lst = Vec::from([String::from("Manage tasks"), String::from("Manage Schedules")]);
+    let opt_lst = Vec::from([
+        String::from("  Manage tasks"),
+        String::from("󰀡  Manage Schedules"),
+    ]);
 
     options.build(opt_lst);
     let selected = options.print_option(text);

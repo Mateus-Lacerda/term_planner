@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use crate::data::get_tasks;
+use crate::data::get_resources;
 
 pub fn send_notify(message: &str, error: bool) {
     let urgency = if !error { "1" } else { "2" };
@@ -20,8 +20,8 @@ pub fn send_notify(message: &str, error: bool) {
 }
 
 pub fn run_notification_service() {
-    let tasks = get_tasks();
-    match tasks {
+    let resources = get_resources();
+    match resources {
         Ok(t) => {
             let tasks_iter = t
                 .tasks

@@ -68,7 +68,7 @@ impl Options {
                         self.option_selected = true;
                         break;
                     }
-                    120 => {
+                    113 => {
                         println!("{}", colored("So long...", "blue"));
                         unsafe { exit(1) }
                     }
@@ -103,7 +103,7 @@ impl Options {
     fn print_gui(&self) {
         clean_terminal();
         println!("{}", colored("|----  TermPlanner ----|\n", "yellow"));
-        println!("{}", colored("   Press  to exit...   ", "red"));
+        println!("{}", colored("   Press q to exit...   ", "red"));
         println!("{}", colored(" Navigate with      \n", "green"));
         println!("{}", colored(&format!("     {}    ", self.now()), "green"));
         println!("{}", colored("|-----------------------|\n", "yellow"));
@@ -122,14 +122,27 @@ impl Options {
     }
 
     pub fn build_from_tasks(&mut self, options: Resources) {
-        let end = options.len();
+        let end = options.tasks_len();
         let rng = Range {
             start: 1,
             end: end + 1,
         };
         self.options.extend(rng);
         for i in self.options.iter() {
-            self.options_map.insert(*i, options.get_as_text(i - 1));
+            self.options_map.insert(*i, options.get_task_as_text(i - 1));
+        }
+    }
+
+    pub fn build_from_schedules(&mut self, options: Resources) {
+        let end = options.schedules_len();
+        let rng = Range {
+            start: 1,
+            end: end + 1,
+        };
+        self.options.extend(rng);
+        for i in self.options.iter() {
+            self.options_map
+                .insert(*i, options.get_schedule_as_text(i - 1));
         }
     }
 }
