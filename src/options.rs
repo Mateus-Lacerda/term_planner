@@ -1,6 +1,6 @@
-use std::collections::hash_map::HashMap;
 use std::ops::Range;
 use std::vec::Vec;
+use std::{collections::hash_map::HashMap};
 
 use chrono::{FixedOffset, Utc};
 use libc::exit;
@@ -77,6 +77,103 @@ impl Options {
             }
         }
         self.selected as i8
+    }
+
+    pub fn print_radio_option(
+        &mut self,
+        text_before: &str,
+        unique: bool,
+    ) -> HashMap<usize, String> {
+        let opt: usize = 0;
+        let max = self.options.len();
+        let mut selected_map: HashMap<usize, String> = HashMap::new();
+        self.selected = 1;
+        if opt < 1 {
+            loop {
+                self.print_gui();
+                println!("{}", colored(text_before, "yellow"));
+
+                if self.option_selected {
+                    match selected_map.contains_key(&self.selected) {
+                        true => {
+                            selected_map.remove(&self.selected);
+                        }
+                        false => {
+                            selected_map.insert(
+                                self.selected,
+                                self.options_map
+                                    .get(&self.selected)
+                                    .expect("Error!")
+                                    .clone(),
+                            );
+                        }
+                    }
+                    if unique && *&selected_map.len() > 1 {
+                        selected_map.retain(|x,_| x == &self.selected);
+                    }
+                }
+                for i in self.options.iter() {
+                    let k = i;
+                    let v = if let Some(val) = self.options_map.get(k) {
+                        val
+                    } else {
+                        ""
+                    };
+
+                    // Tratamento de Barreiras
+                    if self.selected > max {
+                        self.selected = *k;
+                    }
+                    if self.selected == 0 {
+                        self.selected = max;
+                    }
+
+                    // Efeito visual para opção selecionada
+                    let opt = if selected_map.contains_key(&k) {
+                        format!("󰡖 {k}: {v}")
+                    } else {
+                        format!("󰄱 {k}: {v}")
+                    };
+
+                    if self.selected == *k {
+                        println!(" {}", colored(&opt, "yellow"))
+                    } else {
+                        println!("{opt}");
+                    }
+                }
+                let direction = get_kb_input();
+                self.last_move = direction;
+                self.option_selected = false;
+                self.selected = match direction {
+                    1 => self.selected - 1,
+                    2 => self.selected + 1,
+                    3 => return HashMap::from([(3, String::from("Cancel"))]),
+                    4 => {
+                        self.option_selected = true;
+                        self.selected
+                    }
+                    10 => break,
+                    32 => {
+                        self.option_selected = true;
+                        self.last_move = 4;
+                        self.selected
+                    }
+                    113 => {
+                        println!("{}", colored("So long...", "blue"));
+                        unsafe { exit(1) }
+                    }
+                    // _ => {
+                    //     println!("{direction}");
+                    //     unsafe { exit(1) }
+                    // }
+                    _ => self.selected,
+                };
+            }
+        }
+        // for (k, v) in selected_map.iter() {
+        //     println!("{k}, {v}");
+        // }
+        selected_map
     }
 
     pub fn print_ui_and_text(&mut self, text: &str) {

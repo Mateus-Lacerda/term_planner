@@ -1,5 +1,6 @@
 use std::fs::{read_to_string, write};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use dirs::config_dir;
 use serde_json::{Result, from_str, to_string_pretty};
@@ -10,7 +11,16 @@ use crate::{
 };
 
 fn resources_file_path() -> PathBuf {
-    let mut dir = config_dir().expect("Não conseguiu descobrir XDG config dir");
+    let environment = if cfg!(debug_assertions) {
+        "DEV"
+    } else {
+        "PROD"
+    };
+    let mut dir = if environment == "DEV" {
+        PathBuf::from_str("./data").expect("Falha criar arquivo em ambiente de desenvolvimento.")
+    } else {
+        config_dir().expect("Não conseguiu descobrir XDG config dir")
+    };
     dir.push("term_planner");
     std::fs::create_dir_all(&dir).expect("Falha ao criar config dir");
     dir.push("tasks.json");

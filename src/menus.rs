@@ -47,7 +47,7 @@ fn schedule_menu(text: &str, selected_schedule: i8) {
                 match result {
                     Ok(mut res) => {
                         if let Some(t) = res.get_schedule(selected_schedule as usize - 1) {
-                            t.update();
+                            // t.update();
                             res.save();
                             println!("{}", colored("Schedule updated!", "green"));
                             println!("Press any key to continue...");
@@ -275,6 +275,7 @@ pub fn main_menu() {
 
     options.build(opt_lst);
     let selected = options.print_option(text);
+    // options.print_radio_option(text, false);
     match selected {
         1 => tasks_menu(),
         2 => schedules_menu(),
