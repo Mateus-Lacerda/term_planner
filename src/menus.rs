@@ -46,8 +46,8 @@ fn schedule_menu(text: &str, selected_schedule: i8) {
                 let result = get_resources();
                 match result {
                     Ok(mut res) => {
-                        if let Some(t) = res.get_schedule(selected_schedule as usize - 1) {
-                            // t.update();
+                        if let Some(s) = res.get_schedule(selected_schedule as usize - 1) {
+                            s.update();
                             res.save();
                             println!("{}", colored("Schedule updated!", "green"));
                             println!("Press any key to continue...");

@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter, Result};
+use std::{collections::HashMap, fmt::{Display, Formatter, Result}};
 
 use chrono::{DateTime, Datelike, FixedOffset, TimeDelta, TimeZone, Timelike, Utc, Weekday};
 use serde::{Deserialize, Serialize};
@@ -11,8 +11,9 @@ pub struct Schedule {
     pub description: String,
     pub weekdays: CustomWeekdayVec,
     pub index: usize,
-    notification_time: i64,
-    pub completed: bool,
+    notification_time: u32,
+    hour: u32,
+    minute: u32
 }
 
 impl Display for Schedule {
@@ -28,7 +29,8 @@ impl Default for Schedule {
             index: 0,
             weekdays: CustomWeekdayVec { days: Vec::new() },
             notification_time: 10,
-            completed: false,
+            hour: 0,
+            minute: 0
         }
     }
 }
@@ -40,11 +42,7 @@ impl Schedule {
             self.description,
             self.weekdays.get_as_text()
         );
-        if !self.completed {
-            task_text.to_string()
-        } else {
-            colored(&task_text, "green").to_string()
-        }
+        task_text.to_string()
     }
 
     pub fn new() -> Self {
@@ -53,12 +51,12 @@ impl Schedule {
 
         println!("Describe your schedule:");
         let description: String = input!();
-        println!("Select the hour:");
+        println!("Select the hour (24 hour format):");
         let hour: u32 = integer_input!(now.hour().to_string()) as u32;
         println!("Select the minute:");
-        let min: u32 = integer_input!(now.minute().to_string()) as u32;
+        let minute: u32 = integer_input!(now.minute().to_string()) as u32;
         println!("How many minutes before do you want to be notified?");
-        let notification_time: i64 = integer_input!(10) as i64;
+        let notification_time: u32 = integer_input!(10) as u32;
         
         let weekday_options_list = Vec::from([
             String::from("Sunday"),
@@ -73,65 +71,69 @@ impl Schedule {
         let mut opt = Options::default();
         opt.build(weekday_options_list);
 
-        opt.print_radio_option("Select the day(s) to be notified", false);
+        let weekdays_map = opt.print_radio_option_unmarked("Select the day(s) to be notified", false);
+        let mut weekdays = CustomWeekdayVec::default();
+        for (_, v) in weekdays_map.iter() {
+            let day = CustomWeekday::from(v as &str);
+            weekdays.add_day(day);
+        }
 
-        // if let Some(due_date) = Utc
-        //     .with_ymd_and_hms(year, month, day, hour, min, 0)
-        //     .earliest()
-        // {
-        //     let offset = FixedOffset::east_opt(3 * 3600).expect("");
-        //     let due_date = due_date.with_timezone(&offset);
-        //     Schedule {
-        //         index: 0,
-        //         due_date,
-        //         description,
-        //         completed: false,
-        //         notification_time,
-        //     }
-        // } else {
-        //     Schedule::default()
-        // }
-        Schedule::default()
+        Schedule { description, weekdays, index: 0, notification_time, hour, minute }
+
     }
 
-    // pub fn update(&mut self) {
-    //     println!("Leave it empty if you don't want to edit.");
-    //     println!("Edit the description:");
-    //     let description: String = input!(self.description);
-    //     println!("Select the new day:");
-    //     let day = integer_input!(self.due_date.day().to_string()) as u32;
-    //     println!("Select the new month:");
-    //     let month = integer_input!(self.due_date.month().to_string()) as u32;
-    //     println!("Select the new year:");
-    //     let year = integer_input!(self.due_date.year().to_string());
-    //     println!("Select the new hour:");
-    //     let hour = integer_input!(self.due_date.hour().to_string()) as u32;
-    //     println!("Select the new minute:");
-    //     let min = integer_input!(self.due_date.minute().to_string()) as u32;
-    //     println!("Select the new notification time:");
-    //     let notif_time = integer_input!(self.notification_time) as i64;
-    //
-    //     if let Some(date) = Utc
-    //         .with_ymd_and_hms(year, month, day, hour, min, 0)
-    //         .earliest()
-    //     {
-    //         let offset = FixedOffset::east_opt(3 * 3600).expect("");
-    //         let date = date.with_timezone(&offset);
-    //         self.description = description.to_string();
-    //         self.due_date = date;
-    //         self.notification_time = notif_time;
-    //     } else {
-    //         println!("{}", colored("Error!", "red"))
-    //     }
-    // }
+    pub fn update(&mut self) {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let now = Utc::now().with_timezone(&offset);
 
-    // pub fn is_due(&self) -> bool {
-    //     let offset = FixedOffset::west_opt(3 * 3600).expect("");
-    //     let now = Utc::now().with_timezone(&offset);
-    //     if let Some(td) = TimeDelta::new(60 * self.notification_time, 0) {
-    //         self.due_date - now <= td
-    //     } else {
-    //         false
-    //     }
-    // }
+        println!("Describe your schedule:");
+        self.description = input!();
+        println!("Select the hour (24 hour format):");
+        self.hour = integer_input!(now.hour().to_string()) as u32;
+        println!("Select the minute:");
+        self.minute = integer_input!(now.minute().to_string()) as u32;
+        println!("How many minutes before do you want to be notified?");
+        self.notification_time = integer_input!(10) as u32;
+        
+        let weekday_options_list = Vec::from([
+            String::from("Sunday"),
+            String::from("Monday"),
+            String::from("Tuesday"),
+            String::from("Wednesday"),
+            String::from("Thursday"),
+            String::from("Friday"),
+            String::from("Saturday"),
+        ]);
+
+        let mut opt = Options::default();
+        opt.build(weekday_options_list);
+
+        let mut selected_map = HashMap::new();
+
+        for day in self.weekdays.days.iter() {
+            selected_map.insert(day.value() as usize, String::from(day.name()));
+        }
+
+        let weekdays_map = opt.print_radio_option(
+            "Select the day(s) to be notified", false, selected_map
+        );
+
+        let mut weekdays = CustomWeekdayVec::default();
+        for (_, v) in weekdays_map.iter() {
+            let day = CustomWeekday::from(v as &str);
+            weekdays.add_day(day);
+        }
+        self.weekdays = weekdays;
+    }
+
+    pub fn is_due(&self) -> bool {
+        let offset = FixedOffset::west_opt(3 * 3600).expect("");
+        let now = Utc::now().with_timezone(&offset);
+        if !((now.time().hour() as i64 - self.hour as i64) < 0) {
+            if !((now.time().minute() as i64 - self.minute as i64) < self.notification_time as i64) {
+                return false;
+            }
+        }
+        true
+    }
 }

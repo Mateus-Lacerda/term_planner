@@ -102,11 +102,7 @@ impl Resources {
     pub fn get_schedule_as_text(&self, idx: usize) -> String {
         if let Some(s) = self.schedules.get(idx) {
             let schedule = format!("{} - ({})", s.description, s.weekdays.get_as_text());
-            if !s.completed {
-                schedule.to_string()
-            } else {
-                colored(&schedule, "green").to_string()
-            }
+            schedule.to_string()
         } else {
             String::from("There was an error reading the schedule!")
         }

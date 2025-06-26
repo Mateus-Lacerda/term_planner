@@ -54,7 +54,7 @@ pub enum CustomWeekday {
 }
 
 impl CustomWeekday {
-    fn value(&self) -> i32 {
+    pub fn value(&self) -> i32 {
         match *self {
             CustomWeekday::Sunday => 0,
             CustomWeekday::Monday => 1,
@@ -65,7 +65,7 @@ impl CustomWeekday {
             CustomWeekday::Saturday => 6,
         }
     }
-    fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         match *self {
             CustomWeekday::Sunday => "Sunday",
             CustomWeekday::Monday => "Monday",
@@ -85,6 +85,21 @@ impl CustomWeekday {
             CustomWeekday::Thursday => "TH",
             CustomWeekday::Friday => "FR",
             CustomWeekday::Saturday => "SA",
+        }
+    }
+}
+
+impl From<&str> for CustomWeekday {
+    fn from(value: &str) -> Self {
+        match value {
+            "Sunday" => CustomWeekday::Sunday,
+            "Monday" => CustomWeekday::Monday,
+            "Tuesday" => CustomWeekday::Tuesday,
+            "Wednesday" => CustomWeekday::Wednesday,
+            "Thursday" => CustomWeekday::Thursday,
+            "Friday" => CustomWeekday::Friday,
+            "Saturday" => CustomWeekday::Saturday,
+            _ => CustomWeekday::Sunday,
         }
     }
 }
@@ -123,5 +138,11 @@ impl CustomWeekdayVec {
                 break;
             }
         }
+    }
+}
+
+impl Default for CustomWeekdayVec {
+    fn default() -> Self {
+        CustomWeekdayVec { days: Vec::new() }
     }
 }

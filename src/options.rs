@@ -26,7 +26,7 @@ impl Options {
         self.selected = 1;
         if opt < 1 {
             loop {
-                self.print_gui();
+                self.print_tui();
                 println!("{}", colored(text_before, "yellow"));
                 for i in self.options.iter() {
                     let k = i;
@@ -79,18 +79,27 @@ impl Options {
         self.selected as i8
     }
 
-    pub fn print_radio_option(
+    pub fn print_radio_option_unmarked(
         &mut self,
         text_before: &str,
         unique: bool,
     ) -> HashMap<usize, String> {
+        let selected_map: HashMap<usize, String> = HashMap::new();
+        return self.print_radio_option(text_before, unique, selected_map)
+    }
+
+    pub fn print_radio_option(
+        &mut self,
+        text_before: &str,
+        unique: bool,
+        mut selected_map: HashMap<usize, String>
+    ) -> HashMap<usize, String> {
         let opt: usize = 0;
         let max = self.options.len();
-        let mut selected_map: HashMap<usize, String> = HashMap::new();
         self.selected = 1;
         if opt < 1 {
             loop {
-                self.print_gui();
+                self.print_tui();
                 println!("{}", colored(text_before, "yellow"));
 
                 if self.option_selected {
@@ -177,7 +186,7 @@ impl Options {
     }
 
     pub fn print_ui_and_text(&mut self, text: &str) {
-        self.print_gui();
+        self.print_tui();
         println!("{}", colored(text, "yellow"));
     }
 
@@ -197,7 +206,7 @@ impl Options {
             .to_string()
     }
 
-    fn print_gui(&self) {
+    fn print_tui(&self) {
         clean_terminal();
         println!("{}", colored("|----  TermPlanner ----|\n", "yellow"));
         println!("{}", colored("   Press q to exit...   ", "red"));
