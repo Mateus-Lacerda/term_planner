@@ -49,8 +49,13 @@ jobs:
           echo "new=$NEW" >> $GITHUB_OUTPUT
 
           if [[ "$NEW" != "$OLD" ]]; then
-            sed -i.bak -E "/^\[package\]$/,/^\[/ s/^version = \"$OLD\"/version = \"$NEW\"/" Cargo.toml \
-              || echo "sed failed, but continuing"
+            OLD_ESCAPED=$(echo "$OLD" | sed 's/\./\\./g')
+
+            sed -i.bak -E "/^\[package\]$/,/^\[/ s#^version = \"$OLD_ESCAPED\"#version = \"$NEW\"#" Cargo.toml
+
+            if [ $? -ne 0 ]; then
+              echo "sed command failed!"
+              exit
           fi
           set -e
 
