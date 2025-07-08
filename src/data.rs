@@ -31,7 +31,7 @@ pub fn write_resources(resources: &Resources) {
     let ser = to_string_pretty(resources);
     match ser {
         Ok(ser) => _ = write(resources_file_path(), ser),
-        Err(_) => println!("{}", colored("Erro!", "red")),
+        Err(_) => println!("{}", colored("Error writing resources!", "red")),
     }
 }
 
@@ -53,7 +53,7 @@ pub fn add_task() -> Result<()> {
             result.push_task(Task::new());
             write_resources(&result);
         }
-        Err(_) => println!("{}", colored("Erro!", "red")),
+        Err(_) => println!("{}", colored("Error adding task!", "red")),
     }
 
     Ok(())
@@ -66,7 +66,7 @@ pub fn add_schedule() -> Result<()> {
             result.push_schedule(Schedule::new());
             write_resources(&result);
         }
-        Err(_) => println!("{}", colored("Erro!", "red")),
+        Err(_) => println!("{}", colored("Error adding schedule!", "red")),
     }
 
     Ok(())

@@ -19,14 +19,14 @@ fn add_from_input(resource: Resource) {
             let res = add_task();
             match res {
                 Ok(_) => println!("{}", colored("Task added!", "green")),
-                Err(_) => println!("{}", colored("Error!", "red")),
+                Err(_) => println!("{}", colored("Error adding task!", "red")),
             }
         }
         Resource::ScheduleResource => {
             let res = add_schedule();
             match res {
                 Ok(_) => println!("{}", colored("Schedule added!", "green")),
-                Err(_) => println!("{}", colored("Error!", "red")),
+                Err(_) => println!("{}", colored("Error adding schedule!", "red")),
             }
         }
     }
@@ -53,10 +53,10 @@ fn schedule_menu(text: &str, selected_schedule: i8) {
                             println!("Press any key to continue...");
                             _ = get_kb_input();
                         } else {
-                            println!("{}", colored("Error!", "red"))
+                            println!("{}", colored("Error getting schedule!", "red"))
                         }
                     }
-                    Err(_) => println!("{}", colored("Error!", "red")),
+                    Err(_) => println!("{}", colored("Error getting resources!", "red")),
                 }
             }
             2 => {
@@ -78,7 +78,7 @@ fn schedule_menu(text: &str, selected_schedule: i8) {
                         println!("Press any key to continue...");
                         _ = get_kb_input();
                     }
-                    Err(_) => println!("{}", colored("Error!", "red")),
+                    Err(_) => println!("{}", colored("Error getting resources!", "red")),
                 }
             }
             _ => show_schedules(),
@@ -102,7 +102,7 @@ fn task_menu(text: &str, selected_task: i8) {
     };
 
     if d_or_ud.is_empty() {
-        println!("{}", colored("Error!", "red"));
+        println!("{}", colored("Error defining if task is done!", "red"));
         println!("Press any key to continue...");
         _ = get_kb_input();
         main_menu();
@@ -126,7 +126,7 @@ fn task_menu(text: &str, selected_task: i8) {
                         println!("Press any key to continue...");
                         _ = get_kb_input();
                     }
-                    Err(_) => println!("{}", colored("Error!", "red")),
+                    Err(_) => println!("{}", colored("Error getting resources!", "red")),
                 }
             }
             2 => {
@@ -141,10 +141,10 @@ fn task_menu(text: &str, selected_task: i8) {
                             println!("Press any key to continue...");
                             _ = get_kb_input();
                         } else {
-                            println!("{}", colored("Error!", "red"))
+                            println!("{}", colored("Error getting task!", "red"))
                         }
                     }
-                    Err(_) => println!("{}", colored("Error!", "red")),
+                    Err(_) => println!("{}", colored("Error getting resources!", "red")),
                 }
             }
             3 => {
@@ -166,7 +166,7 @@ fn task_menu(text: &str, selected_task: i8) {
                         println!("Press any key to continue...");
                         _ = get_kb_input();
                     }
-                    Err(_) => println!("{}", colored("Error!", "red")),
+                    Err(_) => println!("{}", colored("Error getting resources!", "red")),
                 }
             }
             _ => show_tasks(),
@@ -198,7 +198,7 @@ fn show_tasks() {
                 _ => println!("{}", options.last_move),
             }
         }
-        Err(_) => println!("{}", colored("Error!", "red")),
+        Err(_) => println!("{}", colored("Error getting resources!", "red")),
     }
 }
 
@@ -224,7 +224,7 @@ fn show_schedules() {
                 _ => println!("{}", options.last_move),
             }
         }
-        Err(_) => println!("{}", colored("Error!", "red")),
+        Err(_) => println!("{}", colored("Error getting resources!", "red")),
     }
 }
 

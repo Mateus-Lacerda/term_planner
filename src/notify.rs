@@ -15,7 +15,7 @@ pub fn send_notify(message: &str, error: bool) {
         Ok(res) => {
             println!("OK! {}", String::from_utf8_lossy(&res.stderr));
         }
-        Err(_) => println!("Error!"),
+        Err(_) => println!("Error sending notification!"),
     }
 }
 

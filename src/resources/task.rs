@@ -113,7 +113,7 @@ impl Task {
             self.due_date = date;
             self.notification_time = notif_time;
         } else {
-            println!("{}", colored("Error!", "red"))
+            println!("{}", colored("Error getting date!", "red"))
         }
     }
 

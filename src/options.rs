@@ -103,17 +103,6 @@ impl Options {
                 println!("{}", colored(text_before, "yellow"));
 
                 if self.option_selected {
-                    // if selected_map.contains_key(&self.selected) {
-                    //     selected_map.remove(&self.selected);
-                    // } else {
-                    //     selected_map.insert(
-                    //         self.selected,
-                    //         self.options_map
-                    //             .get(&self.selected)
-                    //             .expect("Error!")
-                    //             .clone(),
-                    //     );
-                    // }
                     match selected_map.entry(self.selected) {
                         Entry::Occupied(e) => {
                             e.remove();
