@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use crate::data::get_tasks;
+use crate::data::get_resources;
 
 pub fn send_notify(message: &str, error: bool) {
     let urgency = if !error { "1" } else { "2" };
@@ -20,8 +20,8 @@ pub fn send_notify(message: &str, error: bool) {
 }
 
 pub fn run_notification_service() {
-    let tasks = get_tasks();
-    match tasks {
+    let resources = get_resources();
+    match resources {
         Ok(t) => {
             let tasks_iter = t
                 .tasks
@@ -31,6 +31,14 @@ pub fn run_notification_service() {
 
             for task in tasks_iter {
                 let msg = format!("Task is due: {}", task.get_as_text());
+                println!("{msg}");
+                send_notify(&msg, false);
+            }
+
+            let schedules_iter = t.schedules.iter().filter(|schedule| schedule.is_due());
+
+            for schedule in schedules_iter {
+                let msg = format!("Schedule is due: {}", schedule.get_as_text());
                 println!("{msg}");
                 send_notify(&msg, false);
             }

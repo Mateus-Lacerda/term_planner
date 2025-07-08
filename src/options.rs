@@ -1,4 +1,4 @@
-use std::collections::hash_map::HashMap;
+use std::collections::hash_map::{Entry, HashMap};
 use std::ops::Range;
 use std::vec::Vec;
 
@@ -8,7 +8,7 @@ use libc::exit;
 use crate::{
     colors::colored,
     io_utils::{clean_terminal, get_kb_input},
-    task::TaskVec,
+    resources::Resources,
 };
 
 pub struct Options {
@@ -26,7 +26,7 @@ impl Options {
         self.selected = 1;
         if opt < 1 {
             loop {
-                self.print_gui();
+                self.print_tui();
                 println!("{}", colored(text_before, "yellow"));
                 for i in self.options.iter() {
                     let k = i;
@@ -68,7 +68,7 @@ impl Options {
                         self.option_selected = true;
                         break;
                     }
-                    120 => {
+                    113 => {
                         println!("{}", colored("So long...", "blue"));
                         unsafe { exit(1) }
                     }
@@ -79,8 +79,121 @@ impl Options {
         self.selected as i8
     }
 
+    pub fn print_radio_option_unmarked(
+        &mut self,
+        text_before: &str,
+        unique: bool,
+    ) -> HashMap<usize, String> {
+        let selected_map: HashMap<usize, String> = HashMap::new();
+        self.print_radio_option(text_before, unique, selected_map)
+    }
+
+    pub fn print_radio_option(
+        &mut self,
+        text_before: &str,
+        unique: bool,
+        mut selected_map: HashMap<usize, String>,
+    ) -> HashMap<usize, String> {
+        let opt: usize = 0;
+        let max = self.options.len();
+        self.selected = 1;
+        if opt < 1 {
+            loop {
+                self.print_tui();
+                println!("{}", colored(text_before, "yellow"));
+
+                if self.option_selected {
+                    // if selected_map.contains_key(&self.selected) {
+                    //     selected_map.remove(&self.selected);
+                    // } else {
+                    //     selected_map.insert(
+                    //         self.selected,
+                    //         self.options_map
+                    //             .get(&self.selected)
+                    //             .expect("Error!")
+                    //             .clone(),
+                    //     );
+                    // }
+                    match selected_map.entry(self.selected) {
+                        Entry::Occupied(e) => {
+                            e.remove();
+                        }
+                        Entry::Vacant(e) => {
+                            if let Some(value) = self.options_map.get(&self.selected) {
+                                e.insert(value.clone());
+                            }
+                        }
+                    }
+                    if unique && selected_map.len() > 1 {
+                        selected_map.retain(|x, _| x == &self.selected);
+                    }
+                }
+                for i in self.options.iter() {
+                    let k = i;
+                    let v = if let Some(val) = self.options_map.get(k) {
+                        val
+                    } else {
+                        ""
+                    };
+
+                    // Tratamento de Barreiras
+                    if self.selected > max {
+                        self.selected = *k;
+                    }
+                    if self.selected == 0 {
+                        self.selected = max;
+                    }
+
+                    // Efeito visual para opção selecionada
+                    let opt = if selected_map.contains_key(k) {
+                        format!("󰡖 {k}: {v}")
+                    } else {
+                        format!("󰄱 {k}: {v}")
+                    };
+
+                    if self.selected == *k {
+                        println!(" {}", colored(&opt, "yellow"))
+                    } else {
+                        println!("{opt}");
+                    }
+                }
+                let direction = get_kb_input();
+                self.last_move = direction;
+                self.option_selected = false;
+                self.selected = match direction {
+                    1 => self.selected - 1,
+                    2 => self.selected + 1,
+                    3 => return HashMap::from([(3, String::from("Cancel"))]),
+                    4 => {
+                        self.option_selected = true;
+                        self.selected
+                    }
+                    10 => break,
+                    32 => {
+                        self.option_selected = true;
+                        self.last_move = 4;
+                        self.selected
+                    }
+                    113 => {
+                        println!("{}", colored("So long...", "blue"));
+                        unsafe { exit(1) }
+                    }
+                    // _ => {
+                    //     println!("{direction}");
+                    //     unsafe { exit(1) }
+                    // }
+                    _ => self.selected,
+                };
+            }
+        }
+        // for (k, v) in selected_map.iter() {
+        //     println!("{k}, {v}");
+        // }
+        selected_map
+    }
+
     pub fn print_ui_and_text(&mut self, text: &str) {
-        self.print_gui();
+        self.print_tui();
         println!("{}", colored(text, "yellow"));
     }
 
@@ -100,10 +213,10 @@ impl Options {
             .to_string()
     }
 
-    fn print_gui(&self) {
+    fn print_tui(&self) {
         clean_terminal();
         println!("{}", colored("|----  TermPlanner ----|\n", "yellow"));
-        println!("{}", colored("   Press  to exit...   ", "red"));
+        println!("{}", colored("   Press q to exit...   ", "red"));
         println!("{}", colored(" Navigate with      \n", "green"));
         println!("{}", colored(&format!("     {}    ", self.now()), "green"));
         println!("{}", colored("|-----------------------|\n", "yellow"));
@@ -121,15 +234,28 @@ impl Options {
         }
     }
 
-    pub fn build_from_tasks(&mut self, options: TaskVec) {
-        let end = options.len();
+    pub fn build_from_tasks(&mut self, options: Resources) {
+        let end = options.tasks_len();
         let rng = Range {
             start: 1,
             end: end + 1,
         };
         self.options.extend(rng);
         for i in self.options.iter() {
-            self.options_map.insert(*i, options.get_as_text(i - 1));
+            self.options_map.insert(*i, options.get_task_as_text(i - 1));
+        }
+    }
+
+    pub fn build_from_schedules(&mut self, options: Resources) {
+        let end = options.schedules_len();
+        let rng = Range {
+            start: 1,
+            end: end + 1,
+        };
+        self.options.extend(rng);
+        for i in self.options.iter() {
+            self.options_map
+                .insert(*i, options.get_schedule_as_text(i - 1));
         }
     }
 }

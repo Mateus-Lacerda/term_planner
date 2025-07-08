@@ -3,125 +3,14 @@ use std::fmt::{Display, Formatter, Result};
 use chrono::{DateTime, Datelike, FixedOffset, TimeDelta, TimeZone, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{colors::colored, data::write_tasks, input, integer_input};
-
-// Code from serde documentation
-mod my_date_format {
-    use chrono::{DateTime, FixedOffset, NaiveDateTime};
-    use serde::{self, Deserialize, Deserializer, Serializer};
-
-    const FORMAT: &str = "%Y-%m-%d %H:%M";
-
-    // The signature of a serialize_with function must follow the pattern:
-    //
-    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
-    //    where
-    //        S: Serializer
-    //
-    // although it may also be generic over the input types T.
-    pub fn serialize<S>(date: &DateTime<FixedOffset>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let s = format!("{}", date.format(FORMAT));
-        serializer.serialize_str(&s)
-    }
-
-    // The signature of a deserialize_with function must follow the pattern:
-    //
-    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
-    //    where
-    //        D: Deserializer<'de>
-    //
-    // although it may also be generic over the output types T.
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime<FixedOffset>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        let dt = NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
-        let offset = FixedOffset::west_opt(3 * 3600).expect("");
-        Ok(DateTime::<FixedOffset>::from_naive_utc_and_offset(
-            dt, offset,
-        ))
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TaskVec {
-    pub tasks: Vec<Task>,
-}
-
-impl TaskVec {
-    pub fn push(&mut self, mut task: Task) {
-        let index = self.len();
-        task.index = index;
-        self.tasks.insert(index, task);
-    }
-
-    pub fn print_tasks(&self) {
-        for task in self.tasks.iter() {
-            println!("{task}")
-        }
-    }
-
-    pub fn len(&self) -> usize {
-        self.tasks.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.tasks.is_empty()
-    }
-
-    pub fn get_as_text(&self, idx: usize) -> String {
-        if let Some(t) = self.tasks.get(idx) {
-            let task = format!("{} - ({})", t.description, t.due_date);
-            if !t.completed {
-                task.to_string()
-            } else {
-                colored(&task, "green").to_string()
-            }
-        } else {
-            String::from("There was an error reading the task!")
-        }
-    }
-
-    pub fn remove(&mut self, idx: usize) {
-        self.tasks.remove(idx);
-        self.reindex();
-        self.save();
-    }
-
-    pub fn get(&mut self, idx: usize) -> Option<&mut Task> {
-        self.tasks.get_mut(idx)
-    }
-
-    pub fn reindex(&mut self) {
-        for (counter, task) in self.tasks.iter_mut().enumerate() {
-            task.index = counter;
-        }
-    }
-
-    pub fn save(&self) {
-        write_tasks(self);
-    }
-
-    pub fn change_status(&mut self, idx: usize) {
-        if let Some(t) = &mut self.tasks.get_mut(idx) {
-            t.completed = !t.completed;
-            write_tasks(self);
-        } else {
-            println!("{}", colored("There was an error reading the task!", "red"));
-        }
-    }
-}
+use crate::{colors::colored, input, integer_input, resources::my_date_format};
 
 #[derive(Serialize, Deserialize)]
 pub struct Task {
-    description: String,
+    pub description: String,
     #[serde(with = "my_date_format")]
-    due_date: DateTime<FixedOffset>,
-    index: usize,
+    pub due_date: DateTime<FixedOffset>,
+    pub index: usize,
     notification_time: i64,
     pub completed: bool,
 }
