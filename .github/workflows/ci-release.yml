@@ -26,7 +26,7 @@ jobs:
             LEVEL="minor"
           elif [[ "$BRANCH" =~ ^fix/ ]]; then
             LEVEL="patch"
-          elif [[ "$BRANCH" =~ ^breaking/ ]]; then
+          elif [[ "$BRANCH" =~ ^release/ ]]; then
             LEVEL="major"
           fi
           echo "level=$LEVEL" >> $GITHUB_OUTPUT
@@ -35,7 +35,7 @@ jobs:
         id: bumpver
         run: |
           set +e
-          OLD=$(grep '^version =' Cargo.toml | cut -d\" -f2) || OLD="0.0.0"
+          OLD=$(grep '^version =' Cargo.toml | head -1 | cut -d\" -f2) || OLD="0.0.0"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD" || true
 
           case "${{ steps.bump.outputs.level }}" in
@@ -49,8 +49,17 @@ jobs:
           echo "new=$NEW" >> $GITHUB_OUTPUT
 
           if [[ "$NEW" != "$OLD" ]]; then
-            sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$NEW\"/" Cargo.toml \
-              || echo "sed failed, but continuing"
+            echo "Updating version $OLD to $NEW"
+
+            OLD_ESCAPED=$(echo "$OLD" | sed 's/\./\\./g')
+            
+            sed -i.bak -E "/^\[package\]$/,/^\[/ s#^version = \"$OLD_ESCAPED\"#version = \"$NEW\"#" Cargo.toml
+            
+            if [ $? -ne 0 ]; then
+              echo "sed command failed!"
+              exit 1
+            fi
+            rm -f Cargo.toml.bak
           fi
           set -e
 
