@@ -26,7 +26,7 @@ jobs:
             LEVEL="minor"
           elif [[ "$BRANCH" =~ ^fix/ ]]; then
             LEVEL="patch"
-          elif [[ "$BRANCH" =~ ^breaking/ ]]; then
+          elif [[ "$BRANCH" =~ ^release/ ]]; then
             LEVEL="major"
           fi
           echo "level=$LEVEL" >> $GITHUB_OUTPUT
@@ -49,7 +49,7 @@ jobs:
           echo "new=$NEW" >> $GITHUB_OUTPUT
 
           if [[ "$NEW" != "$OLD" ]]; then
-            sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$NEW\"/" Cargo.toml \
+            sed -i.bak -E "/^\[package\]$/,/^\[/ s/^version = \"$OLD\"/version = \"$NEW\"/" Cargo.toml \
               || echo "sed failed, but continuing"
           fi
           set -e
