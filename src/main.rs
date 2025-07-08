@@ -26,7 +26,7 @@ fn main() {
         }
     }
     send_notify("Task planner started!", false);
-    run_notification_service();
+    // run_notification_service();
     clean_terminal();
     main_menu();
 }

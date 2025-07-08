@@ -35,10 +35,7 @@ pub fn run_notification_service() {
                 send_notify(&msg, false);
             }
 
-            let schedules_iter = t
-                .schedules
-                .iter()
-                .filter(|schedule| schedule.is_due());
+            let schedules_iter = t.schedules.iter().filter(|schedule| schedule.is_due());
 
             for schedule in schedules_iter {
                 let msg = format!("Schedule is due: {}", schedule.get_as_text());

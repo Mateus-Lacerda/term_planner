@@ -270,7 +270,7 @@ pub fn main_menu() {
     let mut options = Options::default();
     let opt_lst = Vec::from([
         String::from("  Manage tasks"),
-        String::from("󰀡  Manage Schedules"),
+        String::from("󰀡  Manage schedules"),
     ]);
 
     options.build(opt_lst);

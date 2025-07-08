@@ -1,6 +1,6 @@
+use std::collections::hash_map::{Entry, HashMap};
 use std::ops::Range;
 use std::vec::Vec;
-use std::{collections::hash_map::HashMap};
 
 use chrono::{FixedOffset, Utc};
 use libc::exit;
@@ -85,14 +85,14 @@ impl Options {
         unique: bool,
     ) -> HashMap<usize, String> {
         let selected_map: HashMap<usize, String> = HashMap::new();
-        return self.print_radio_option(text_before, unique, selected_map)
+        self.print_radio_option(text_before, unique, selected_map)
     }
 
     pub fn print_radio_option(
         &mut self,
         text_before: &str,
         unique: bool,
-        mut selected_map: HashMap<usize, String>
+        mut selected_map: HashMap<usize, String>,
     ) -> HashMap<usize, String> {
         let opt: usize = 0;
         let max = self.options.len();
@@ -103,22 +103,29 @@ impl Options {
                 println!("{}", colored(text_before, "yellow"));
 
                 if self.option_selected {
-                    match selected_map.contains_key(&self.selected) {
-                        true => {
-                            selected_map.remove(&self.selected);
+                    // if selected_map.contains_key(&self.selected) {
+                    //     selected_map.remove(&self.selected);
+                    // } else {
+                    //     selected_map.insert(
+                    //         self.selected,
+                    //         self.options_map
+                    //             .get(&self.selected)
+                    //             .expect("Error!")
+                    //             .clone(),
+                    //     );
+                    // }
+                    match selected_map.entry(self.selected) {
+                        Entry::Occupied(e) => {
+                            e.remove();
                         }
-                        false => {
-                            selected_map.insert(
-                                self.selected,
-                                self.options_map
-                                    .get(&self.selected)
-                                    .expect("Error!")
-                                    .clone(),
-                            );
+                        Entry::Vacant(e) => {
+                            if let Some(value) = self.options_map.get(&self.selected) {
+                                e.insert(value.clone());
+                            }
                         }
                     }
-                    if unique && *&selected_map.len() > 1 {
-                        selected_map.retain(|x,_| x == &self.selected);
+                    if unique && selected_map.len() > 1 {
+                        selected_map.retain(|x, _| x == &self.selected);
                     }
                 }
                 for i in self.options.iter() {
@@ -138,7 +145,7 @@ impl Options {
                     }
 
                     // Efeito visual para opção selecionada
-                    let opt = if selected_map.contains_key(&k) {
+                    let opt = if selected_map.contains_key(k) {
                         format!("󰡖 {k}: {v}")
                     } else {
                         format!("󰄱 {k}: {v}")

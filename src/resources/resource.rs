@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -42,12 +41,12 @@ impl Resources {
 
     pub fn get_task_as_text(&self, idx: usize) -> String {
         if let Some(t) = self.tasks.get(idx) {
-            let task = format!("{} - ({})", t.description, t.due_date);
-            if !t.completed {
-                task.to_string()
-            } else {
-                colored(&task, "green").to_string()
-            }
+            t.get_as_text()
+            // if !t.completed {
+            //     task.to_string()
+            // } else {
+            //     colored(&task, "green").to_string()
+            // }
         } else {
             String::from("There was an error reading the task!")
         }
@@ -101,8 +100,7 @@ impl Resources {
 
     pub fn get_schedule_as_text(&self, idx: usize) -> String {
         if let Some(s) = self.schedules.get(idx) {
-            let schedule = format!("{} - ({})", s.description, s.weekdays.get_as_text());
-            schedule.to_string()
+            s.get_as_text()
         } else {
             String::from("There was an error reading the schedule!")
         }

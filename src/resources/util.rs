@@ -50,19 +50,19 @@ pub enum CustomWeekday {
     Wednesday,
     Thursday,
     Friday,
-    Saturday
+    Saturday,
 }
 
 impl CustomWeekday {
-    pub fn value(&self) -> i32 {
+    pub fn value(&self) -> u32 {
         match *self {
-            CustomWeekday::Sunday => 0,
-            CustomWeekday::Monday => 1,
-            CustomWeekday::Tuesday => 2,
-            CustomWeekday::Wednesday => 3,
-            CustomWeekday::Thursday => 4,
-            CustomWeekday::Friday => 5,
-            CustomWeekday::Saturday => 6,
+            CustomWeekday::Sunday => 1,
+            CustomWeekday::Monday => 2,
+            CustomWeekday::Tuesday => 3,
+            CustomWeekday::Wednesday => 4,
+            CustomWeekday::Thursday => 5,
+            CustomWeekday::Friday => 6,
+            CustomWeekday::Saturday => 7,
         }
     }
     pub fn name(&self) -> &str {
@@ -104,9 +104,9 @@ impl From<&str> for CustomWeekday {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct CustomWeekdayVec {
-    pub days: Vec<CustomWeekday>
+    pub days: Vec<CustomWeekday>,
 }
 
 impl CustomWeekdayVec {
@@ -116,17 +116,13 @@ impl CustomWeekdayVec {
             if text.is_empty() {
                 text = String::from(day.id());
             } else {
-                text = format!(
-                    "{}, {}",
-                    text,
-                    String::from(day.id())
-                );
+                text = format!("{}, {}", text, String::from(day.id()));
             }
         }
         text
     }
     pub fn add_day(&mut self, day: CustomWeekday) {
-        if self.days.iter().filter(|x| x.id() == day.id()).next().is_none() {
+        if !self.days.iter().any(|x| x.id() == day.id()) {
             self.days.push(day);
         }
         self.days.sort_by_key(|x| x.value())
@@ -138,11 +134,5 @@ impl CustomWeekdayVec {
                 break;
             }
         }
-    }
-}
-
-impl Default for CustomWeekdayVec {
-    fn default() -> Self {
-        CustomWeekdayVec { days: Vec::new() }
     }
 }
